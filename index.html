@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.0</title>
+<title>Dragon Boat Speedometer V7.1</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.0 · 槳頻診斷版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.1 · 槳頻修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -118,7 +118,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div style="margin-top:10px"><button class="accent" id="motionBtn">允許動作感測</button></div>
 <details style="margin-top:8px">
 <summary class="status" style="cursor:pointer">槳頻設定／重新校正</summary>
-<div style="margin-top:8px"><button class="secondary" id="calibrateBtn">校正 10 槳</button></div>
+<div style="margin-top:8px"><button class="secondary" id="calibrateBtn">進階校正 10 槳</button></div>
 <div class="sens">
 <button class="secondary" data-sens="low">低</button>
 <button class="secondary active" data-sens="mid">中</button>
@@ -406,39 +406,39 @@ function enhancedStrokeMotion(e){
   const sig=Math.abs(mag-baseline);
 
   v69Noise=0.96*v69Noise+0.04*sig;
-  const threshold=Math.max(0.18,Math.min(1.8,v69Noise*2.2));
+  const threshold=Math.max(0.22,Math.min(1.8,v69Noise*2.45));
   const slope=sig-v69PrevSignal;
   if(slope>0)v69Peak=Math.max(v69Peak,sig);
 
   const now=performance.now();
-  const typical=v69Intervals.length?medianV69(v69Intervals.slice(-7)):700;
-  // Dragon-boat practical cadence window: ~45–150 SPM.
-  const minGap=Math.max(380,typical*0.55);
-  const maxGap=Math.min(1400,typical*1.65);
+  const typical=v69Intervals.length?medianV69(v69Intervals.slice(-7)):750;
+  // Anti-double-trigger: one paddle cycle should not create two strokes.
+  // 480 ms corresponds to a hard ceiling of about 125 SPM.
+  const minGap=Math.max(480,typical*0.68);
+  const maxGap=Math.min(1600,typical*1.60);
 
   // Detect a local peak. Once rhythm is learned, allow a slightly lower threshold in the expected time window.
   const since=now-v69LastStrokeAt;
   const expected=v69LastStrokeAt>0 && since>=minGap && since<=maxGap;
-  const effectiveThreshold=expected?threshold*0.72:threshold;
+  const effectiveThreshold=expected?threshold*0.82:threshold;
   const peakEnded=(v69PrevSlope>0 && slope<=0);
 
   if(peakEnded && v69Peak>=effectiveThreshold && (v69LastStrokeAt===0 || since>=minGap)){
     if(v69LastStrokeAt>0){
       const dt=since;
-      if(dt>=360 && dt<=1500){
+      if(dt>=480 && dt<=1600){
         v69Intervals.push(dt);
         if(v69Intervals.length>10)v69Intervals.shift();
         const med=medianV69(v69Intervals);
         currentSpm=Math.round(60000/med);
-        currentSpm=Math.max(40,Math.min(160,currentSpm));
+        currentSpm=Math.max(35,Math.min(125,currentSpm));
         const deviations=v69Intervals.map(v=>Math.abs(v-med)/med);
         const dev=deviations.length?deviations.reduce((s,v)=>s+v,0)/deviations.length:0;
         v69Confidence=Math.round(Math.max(0,Math.min(99,100-dev*180)));
       }
     }
     v69LastStrokeAt=now;
-    lastStrokeTime=now;
-    registerStroke();
+    registerStroke(now);
     $("spm").textContent=currentSpm||"--";
     if($("strokeState"))$("strokeState").textContent=v69Confidence>=80?"穩定":v69Confidence>=60?"可用":"學習節奏";
     if($("confidence"))$("confidence").textContent=v69Confidence+"%";
