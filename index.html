@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V6.6</title>
+<title>Dragon Boat Speedometer V6.6.1</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.6 · GPS穩定版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.6.1 · GPS修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -149,7 +149,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="panel">
 <div class="label">GPS / 感測狀態</div>
 <div class="status" id="gpsStatus">等待 GPS...</div>
-<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">V6.6：按開始後會先確認 GPS 定位，成功後才進入倒數。GPS 中斷或權限遭拒時會直接顯示原因；槳頻穩定功能仍保留。</div>
+<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">V6.6.1：修正 GPS 回呼與程式語法錯誤。按開始後會先取得定位，成功才倒數；若失敗會顯示實際原因。</div>
 <div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
 </div>
 </div>
@@ -161,7 +161,7 @@ let motionEnabled=false
 let detectorLastStrokeAt=0, detectorLastMotionAt=0, detectorLearnUntil=0;
 let hpPrev=[0,0,0], lp=[0,0,0], axisEnergy=[0,0,0], detectorAxis=-1;
 let detectorThreshold=0.18, detectorSignalPrev=0, detectorArmed=true;
-let detectorIntervals=[];,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
+let detectorIntervals=[];let calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
 let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
 function fmtTime(ms){if(!isFinite(ms)||ms<0)return"--:--.-";const t=ms/1000,m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
@@ -176,9 +176,7 @@ if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSe
 function startTimerLoop(){clearInterval(timerHandle);timerHandle=setInterval(updateMain,100)} function stopTimerLoop(){clearInterval(timerHandle);timerHandle=null;updateMain()}
 
 function setGpsStatus(text, good=false){
-  if($("gpsAccuracy")){
-    $("gpsAccuracy").textContent = text;
-  }
+  if($("accuracy")){ $("accuracy").textContent = String(text).replace(" m","").replace("GPS 定位中…","--").replace("GPS 定位逾時","--").replace("定位權限被拒絕","--").replace("目前無法取得位置","--").replace("此瀏覽器不支援定位","--"); }
   const el=$("gpsStatus");
   if(el){
     el.textContent=text;
@@ -195,13 +193,13 @@ function gpsErrorText(err){
 function ensureGpsReady(){
   return new Promise((resolve,reject)=>{
     if(!navigator.geolocation){
-      setGpsStatus("此瀏覽器不支援定位");
+      gpsStatus("此瀏覽器不支援定位","bad");
       reject(new Error("unsupported"));
       return;
     }
     gpsStarting=true;
     gpsReady=false;
-    setGpsStatus("GPS 定位中…");
+    gpsStatus("GPS 定位中…","warn");
     if(watchId!==null){
       try{navigator.geolocation.clearWatch(watchId)}catch(e){}
       watchId=null;
@@ -211,13 +209,13 @@ function ensureGpsReady(){
 
     navigator.geolocation.getCurrentPosition(pos=>{
       gpsReady=true;gpsStarting=false;gpsLastFixAt=Date.now();
-      handlePosition(pos);
-      setGpsStatus(Math.round(pos.coords.accuracy)+" m", pos.coords.accuracy<=20);
+      onPosition(pos);
+      gpsStatus("GPS 已定位，精度 ±"+Math.round(pos.coords.accuracy)+"m", pos.coords.accuracy<=15?"good":"warn");
       if(!settled){settled=true;resolve(pos)}
       startGpsWatch();
     },err=>{
       gpsStarting=false;
-      setGpsStatus(gpsErrorText(err));
+      gpsStatus(gpsErrorText(err),"bad");
       if(!settled){settled=true;reject(err)}
     },options);
 
@@ -225,7 +223,7 @@ function ensureGpsReady(){
     gpsStartTimeout=setTimeout(()=>{
       if(!settled && !gpsReady){
         settled=true;gpsStarting=false;
-        setGpsStatus("GPS 定位逾時");
+        gpsStatus("GPS 定位逾時","bad");
         reject(new Error("timeout"));
       }
     },13000);
@@ -238,15 +236,14 @@ function startGpsWatch(){
   }
   watchId=navigator.geolocation.watchPosition(pos=>{
     gpsReady=true;gpsLastFixAt=Date.now();
-    handlePosition(pos);
-    setGpsStatus(Math.round(pos.coords.accuracy)+" m", pos.coords.accuracy<=20);
+    onPosition(pos);
   },err=>{
     gpsReady=false;
-    setGpsStatus(gpsErrorText(err));
+    gpsStatus(gpsErrorText(err),"bad");
   },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
 }
 function requestGps(){
-  if(!navigator.geolocation){setGpsStatus("不支援定位");return}
+  if(!navigator.geolocation){gpsStatus("不支援定位","bad");return}
   startGpsWatch();
 }
 
@@ -323,7 +320,7 @@ setInterval(()=>{
   if(!running)return;
   if(gpsLastFixAt && Date.now()-gpsLastFixAt>8000){
     gpsReady=false;
-    setGpsStatus("GPS 訊號中斷");
+    gpsStatus("GPS 訊號中斷","bad");
   }
 },1000);
 function startRun(){
@@ -529,9 +526,7 @@ try{
   countdownStart();
 }catch(e){
   $("startBtn").textContent="開始訓練";
-  alert("無法開始訓練：目前沒有取得 GPS 定位。
-
-請確認 iPhone「定位服務」與 Safari 網站的位置權限已允許，並開啟「精確位置」。");
+  alert("無法開始訓練：目前沒有取得 GPS 定位。\n\n請確認 iPhone「定位服務」與 Safari 網站的位置權限已允許，並開啟「精確位置」。");
 }finally{
   $("startBtn").disabled=false;
 }
@@ -543,7 +538,7 @@ if(savedSens&&sensCfg[savedSens]){
   sensitivity=savedSens;
   document.querySelectorAll("[data-sens]").forEach(x=>x.classList.toggle("active",x.dataset.sens===savedSens));
 }
-setGpsStatus("尚未定位");resetAll();renderHistory();
+gpsStatus("尚未定位","warn");resetAll();renderHistory();
 </script>
 </body>
 </html>
