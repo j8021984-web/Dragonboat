@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V4</title>
+<title>Dragon Boat Speedometer V5</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -47,7 +47,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V4 · GPS + 自動校正槳頻</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V5 · 一鍵訓練模式</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -69,7 +69,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </div>
 
 <div class="panel controls">
-<button class="primary" id="startBtn">3 秒倒數開始</button>
+<button class="primary" id="startBtn">開始訓練</button>
 <button class="secondary" id="resetBtn">重設</button>
 </div>
 
@@ -81,13 +81,16 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="status" id="motionStatus">尚未啟用動作感測</div>
 <div class="progress"><div id="confidenceBar"></div></div>
 <div class="tiny">信心度：<span id="confidence">0</span>%｜主軸：<span id="axisLabel">未判定</span></div>
-<div style="margin-top:10px"><button class="accent" id="motionBtn">啟用自動槳頻</button></div>
+<div style="margin-top:10px"><button class="accent" id="motionBtn">允許動作感測</button></div>
+<details style="margin-top:8px">
+<summary class="status" style="cursor:pointer">槳頻設定／重新校正</summary>
 <div style="margin-top:8px"><button class="secondary" id="calibrateBtn">校正 10 槳</button></div>
 <div class="sens">
 <button class="secondary" data-sens="low">低</button>
 <button class="secondary active" data-sens="mid">中</button>
 <button class="secondary" data-sens="high">高</button>
 </div>
+</details>
 </div>
 <div>
 <div class="label">總槳數</div><div class="num" id="strokeCount">0</div>
@@ -95,7 +98,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="label" style="margin-top:12px">狀態</div><div class="num" style="font-size:20px" id="strokeState">待機</div>
 </div>
 </div>
-<div class="tiny">請固定手機。V4 會先學習手機主要運動軸，再以節奏、震幅、最短間隔和最近槳頻共同判斷。</div>
+<div class="tiny">請固定手機。V5 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
 </div>
 
 <div class="panel">
@@ -108,7 +111,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="metric"><div class="label">結束速度</div><div class="num"><span id="testEndSpeed">0.0</span></div></div>
 <div class="metric"><div class="label">速度增加</div><div class="num"><span id="testDeltaSpeed">0.0</span></div></div>
 </div>
-<div style="margin-top:10px"><button class="accent" id="testBtn">開始 20 槳測試</button></div>
+<div class="tiny" id="testAutoStatus" style="margin-top:10px">按「開始訓練」後，前 20 槳會自動分析。</div>
 <div style="margin-top:8px"><button class="secondary tap" id="tapStrokeBtn">手動記一槳</button></div>
 </div>
 
@@ -145,12 +148,18 @@ function checkTarget(){const t=Number($("mode").value);if(running&&t>0&&totalDis
 async function requestWakeLock(){try{if("wakeLock"in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}
 function releaseWakeLock(){try{if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}}
 async function countdownStart(){if(running)return;const b=$("countdown");b.style.display="block";for(let i=3;i>=1;i--){b.textContent=i;await new Promise(r=>setTimeout(r,1000))}b.textContent="GO!";await new Promise(r=>setTimeout(r,450));b.style.display="none";startRun()}
-function startRun(){running=true;startedAt=performance.now();lastPos=null;$("startBtn").textContent="停止";$("startBtn").className="danger";startTimerLoop();requestWakeLock()}
-function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;stopTimerLoop();$("startBtn").textContent="3 秒倒數開始";$("startBtn").className="primary";releaseWakeLock()}
-function resetAll(){stopRun();elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testBtn").textContent="開始 20 槳測試";renderSplits();updateMain()}
+function startRun(){
+running=true;startedAt=performance.now();lastPos=null;
+$("startBtn").textContent="停止訓練";$("startBtn").className="danger";
+startTimerLoop();requestWakeLock();
+start20();
+if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：等待第一槳…";
+}
+function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock()}
+function resetAll(){stopRun();elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
-function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndSpeed=smoothSpeed();$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);testActive=false;$("testBtn").textContent="開始 20 槳測試"}}
-function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testStartSpeed=smoothSpeed();$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testBtn").textContent="測試中…"}
+function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndSpeed=smoothSpeed();$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
+function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testStartSpeed=smoothSpeed();$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
 async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",onMotion);motionEnabled=true;motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
 function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
 function beginCalibration(){if(!motionEnabled){motionMsg("請先啟用自動槳頻","warn");return}calibrating=true;calibrationCount=0;calibrationSamples=[];axisScore={x:0,y:0,z:0};confidence=0;strokeTimes=[];lastStrokeTime=0;motionMsg("校正中 0/10","warn");$("strokeState").textContent="學習中"}
@@ -159,9 +168,18 @@ function onMotion(e){if(!motionEnabled)return;const a=e.acceleration||e.accelera
 const raw=vals[axis];filtered=0.82*filtered+0.18*raw;const hp=filtered-prevFiltered;prevFiltered=filtered;noiseWindow.push(Math.abs(hp));if(noiseWindow.length>80)noiseWindow.shift();const noise=Math.max(0.03,median(noiseWindow)+mad(noiseWindow));const cfg=sensCfg[sensitivity],th=noise*cfg.mult;const t=performance.now();
 peakWindow.push({v:Math.abs(hp),t});if(peakWindow.length>5)peakWindow.shift();
 if(Math.abs(hp)>th){const prevIntervals=[];for(let i=1;i<strokeTimes.length;i++)prevIntervals.push(strokeTimes[i]-strokeTimes[i-1]);const medI=median(prevIntervals.slice(-6));let rhythmOK=true;if(medI&&lastStrokeTime){const dt=t-lastStrokeTime;rhythmOK=dt>medI*0.58&&dt<medI*1.55}if(rhythmOK&&(!lastPeakTime||t-lastPeakTime>cfg.minGap)){lastPeakTime=t;registerStroke(t)}}}
-$("startBtn").onclick=()=>running?stopRun():countdownStart();$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;$("tapStrokeBtn").onclick=()=>registerStroke(performance.now());$("testBtn").onclick=()=>testActive?(testActive=false,$("testBtn").textContent="開始 20 槳測試"):start20();
-document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+$("startBtn").onclick=async()=>{
+if(running){stopRun();return}
+if(!motionEnabled) await enableMotion();
+countdownStart();
+};$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;$("tapStrokeBtn").onclick=()=>registerStroke(performance.now());
+document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
+const savedSens=localStorage.getItem("dragonboatSensitivity");
+if(savedSens&&sensCfg[savedSens]){
+  sensitivity=savedSens;
+  document.querySelectorAll("[data-sens]").forEach(x=>x.classList.toggle("active",x.dataset.sens===savedSens));
+}
 requestGps();resetAll();
 </script>
 </body>
