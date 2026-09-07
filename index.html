@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V6.6.1</title>
+<title>Dragon Boat Speedometer V6.7</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.6.1 · GPS修正版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.7 · GPS診斷修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -120,11 +120,11 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="label" style="margin-top:12px">狀態</div><div class="num" style="font-size:20px" id="strokeState">待機</div>
 </div>
 </div>
-<div class="tiny">請固定手機。V6.6 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
+<div class="tiny">請固定手機。V6.3 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
 </div>
 
 <div class="panel">
-<div class="label" style="margin-bottom:8px">前 20 槳自動分析</div>
+<div class="label" style="margin-bottom:8px">20 槳測試</div>
 <div class="grid">
 <div class="metric"><div class="label">目前槳數</div><div class="num"><span id="testStrokeCount">0</span>/20</div></div>
 <div class="metric"><div class="label">20 槳時間</div><div class="num" id="testTime">00:00.0</div></div>
@@ -148,20 +148,16 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="panel"><div class="label">每 100m 分段</div><div id="splits"><div class="status">尚無分段紀錄</div></div></div>
 <div class="panel">
 <div class="label">GPS / 感測狀態</div>
-<div class="status" id="gpsStatus">等待 GPS...</div>
-<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">V6.6.1：修正 GPS 回呼與程式語法錯誤。按開始後會先取得定位，成功才倒數；若失敗會顯示實際原因。</div>
+<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
+<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。</div>
 <div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
 </div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],lastSeriesSecond=-1,gpsReady=false,gpsStarting=false,gpsLastFixAt=0,gpsStartTimeout=null;
-let motionEnabled=false
-let detectorLastStrokeAt=0, detectorLastMotionAt=0, detectorLearnUntil=0;
-let hpPrev=[0,0,0], lp=[0,0,0], axisEnergy=[0,0,0], detectorAxis=-1;
-let detectorThreshold=0.18, detectorSignalPrev=0, detectorArmed=true;
-let detectorIntervals=[];let calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
+let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null;
+let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
 let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
 function fmtTime(ms){if(!isFinite(ms)||ms<0)return"--:--.-";const t=ms/1000,m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
@@ -174,169 +170,173 @@ function haversine(a,b){const R=6371000,l1=a.latitude*Math.PI/180,l2=b.latitude*
 function updateMain(){const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
 if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSecond=sec;runSeries.push({t:e,d:totalDistance,speed:sp,spm:currentSpm});if(runSeries.length>3600)runSeries.shift()}}}
 function startTimerLoop(){clearInterval(timerHandle);timerHandle=setInterval(updateMain,100)} function stopTimerLoop(){clearInterval(timerHandle);timerHandle=null;updateMain()}
-
-function setGpsStatus(text, good=false){
-  if($("accuracy")){ $("accuracy").textContent = String(text).replace(" m","").replace("GPS 定位中…","--").replace("GPS 定位逾時","--").replace("定位權限被拒絕","--").replace("目前無法取得位置","--").replace("此瀏覽器不支援定位","--"); }
+function gpsStatus(t,c="warn"){
   const el=$("gpsStatus");
-  if(el){
-    el.textContent=text;
-    el.className=good?"status good":"status";
-  }
+  if(el){el.textContent=t;el.className="status "+c}
 }
-function gpsErrorText(err){
-  if(!err)return "GPS 未知錯誤";
-  if(err.code===1)return "定位權限被拒絕";
-  if(err.code===2)return "目前無法取得位置";
-  if(err.code===3)return "GPS 定位逾時";
-  return "GPS 錯誤";
+function gpsErrorText(e){
+  if(!e)return "GPS 未知錯誤";
+  if(e.code===1)return "定位權限被拒絕";
+  if(e.code===2)return "目前無法取得位置";
+  if(e.code===3)return "GPS 定位逾時";
+  return "GPS 錯誤："+(e.message||"未知");
 }
-function ensureGpsReady(){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation){
-      gpsStatus("此瀏覽器不支援定位","bad");
-      reject(new Error("unsupported"));
-      return;
-    }
-    gpsStarting=true;
-    gpsReady=false;
-    gpsStatus("GPS 定位中…","warn");
-    if(watchId!==null){
-      try{navigator.geolocation.clearWatch(watchId)}catch(e){}
-      watchId=null;
-    }
-    let settled=false;
-    const options={enableHighAccuracy:true,maximumAge:0,timeout:12000};
+function onPosition(pos){
+  const c=pos.coords,acc=isFinite(c.accuracy)?c.accuracy:999;
+  gpsReady=true;gpsLastFixAt=Date.now();
+  $("accuracy").textContent=Math.round(acc);
+  gpsStatus(acc<=8?"GPS 狀態良好":acc<=20?"GPS 已定位":"GPS 已定位，但精度較差",acc<=8?"good":acc<=20?"warn":"bad");
 
-    navigator.geolocation.getCurrentPosition(pos=>{
-      gpsReady=true;gpsStarting=false;gpsLastFixAt=Date.now();
-      onPosition(pos);
-      gpsStatus("GPS 已定位，精度 ±"+Math.round(pos.coords.accuracy)+"m", pos.coords.accuracy<=15?"good":"warn");
-      if(!settled){settled=true;resolve(pos)}
-      startGpsWatch();
-    },err=>{
-      gpsStarting=false;
-      gpsStatus(gpsErrorText(err),"bad");
-      if(!settled){settled=true;reject(err)}
-    },options);
+  let gpsSpeed=(typeof c.speed==="number"&&isFinite(c.speed)&&c.speed>=0)?c.speed*3.6:0;
+  const cur={latitude:c.latitude,longitude:c.longitude,timestamp:pos.timestamp,accuracy:c.accuracy};
 
-    if(gpsStartTimeout)clearTimeout(gpsStartTimeout);
-    gpsStartTimeout=setTimeout(()=>{
-      if(!settled && !gpsReady){
-        settled=true;gpsStarting=false;
-        gpsStatus("GPS 定位逾時","bad");
-        reject(new Error("timeout"));
+  if(lastPos){
+    const dt=(cur.timestamp-lastPos.timestamp)/1000,dist=haversine(lastPos,cur);
+    if(dt>0&&dt<10&&dist>=0&&dist<80){
+      const cs=dist/dt*3.6;
+      if((!gpsSpeed||gpsSpeed<0.5)&&cs<35)gpsSpeed=cs;
+      if(running&&acc<=30&&dist<40){
+        totalDistance+=dist;checkSplits();checkTarget();
       }
-    },13000);
-  });
+    }
+  }
+  lastPos=cur;
+
+  if(isFinite(gpsSpeed)&&gpsSpeed>=0&&gpsSpeed<=40){
+    speedSamples.push(gpsSpeed);
+    if(speedSamples.length>20)speedSamples.shift();
+    const sm=smoothSpeed();
+    if(sm>maxSpeed)maxSpeed=sm;
+  }
+  updateMain();
 }
 function startGpsWatch(){
-  if(!navigator.geolocation)return;
+  if(!("geolocation" in navigator)){
+    gpsStatus("此瀏覽器不支援定位","bad");return;
+  }
   if(watchId!==null){
     try{navigator.geolocation.clearWatch(watchId)}catch(e){}
+    watchId=null;
   }
-  watchId=navigator.geolocation.watchPosition(pos=>{
-    gpsReady=true;gpsLastFixAt=Date.now();
-    onPosition(pos);
-  },err=>{
-    gpsReady=false;
-    gpsStatus(gpsErrorText(err),"bad");
-  },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  watchId=navigator.geolocation.watchPosition(
+    onPosition,
+    e=>{gpsReady=false;gpsStatus(gpsErrorText(e),"bad")},
+    {enableHighAccuracy:true,maximumAge:1000,timeout:20000}
+  );
 }
 function requestGps(){
-  if(!navigator.geolocation){gpsStatus("不支援定位","bad");return}
   startGpsWatch();
 }
+async function ensureGpsReady(){
+  if(!window.isSecureContext){
+    gpsStatus("必須使用 HTTPS 才能定位","bad");
+    throw new Error("not-secure");
+  }
+  if(!("geolocation" in navigator)){
+    gpsStatus("此瀏覽器不支援定位","bad");
+    throw new Error("unsupported");
+  }
 
-function detectorStatus(text,good=false){
-  if($("strokeState")) $("strokeState").textContent=text;
-  if($("motionStatus")){$("motionStatus").textContent=text;$("motionStatus").className=good?"status good":"status"}
+  // If we already have a recent fix, reuse it.
+  if(gpsReady && Date.now()-gpsLastFixAt<10000){
+    startGpsWatch();
+    return true;
+  }
+
+  gpsStatus("GPS 定位中…","warn");
+  $("accuracy").textContent="--";
+
+  return new Promise((resolve,reject)=>{
+    let done=false;
+    const finish=(ok,val)=>{
+      if(done)return; done=true;
+      gpsPending=null;
+      ok?resolve(val):reject(val);
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        onPosition(pos);
+        startGpsWatch();
+        finish(true,true);
+      },
+      err=>{
+        gpsReady=false;
+        gpsStatus(gpsErrorText(err),"bad");
+        finish(false,err);
+      },
+      {enableHighAccuracy:true,maximumAge:0,timeout:20000}
+    );
+  });
 }
-function robustMotionSample(e){
-  if(!running||!motionEnabled)return;
-  const a=e.acceleration||e.accelerationIncludingGravity;
-  if(!a)return;
-  const vals=[Number(a.x)||0,Number(a.y)||0,Number(a.z)||0], now=performance.now();
-  const hp=[];
-  for(let i=0;i<3;i++){
-    lp[i]=lp[i]*0.88+vals[i]*0.12;
-    hp[i]=vals[i]-lp[i];
-    axisEnergy[i]=axisEnergy[i]*0.96+hp[i]*hp[i]*0.04;
+async function gpsDiagnostic(){
+  if(!window.isSecureContext){
+    alert("目前不是 HTTPS 安全連線，Safari 不會提供 GPS。");
+    return;
   }
-  detectorLastMotionAt=now;
-
-  // First 2.5 seconds continuously learn the axis with the most stroke motion.
-  if(now<detectorLearnUntil || detectorAxis<0){
-    detectorAxis=axisEnergy.indexOf(Math.max(...axisEnergy));
-    const names=["X","Y","Z"];
-    if($("axisName")) $("axisName").textContent=names[detectorAxis]||"學習中";
-    detectorStatus("AUTO 學習中");
-  }else{
-    // Re-evaluate axis slowly so phone orientation changes do not permanently break detection.
-    const best=axisEnergy.indexOf(Math.max(...axisEnergy));
-    if(axisEnergy[best] > (axisEnergy[detectorAxis]||0)*1.65) detectorAxis=best;
-    const names=["X","Y","Z"];
-    if($("axisName")) $("axisName").textContent=names[detectorAxis]||"—";
-  }
-
-  const sig=Math.abs(hp[detectorAxis]||0);
-  // Adaptive threshold: follows ambient vibration, but has sensible bounds.
-  const target=Math.max(0.10,Math.min(1.8,Math.sqrt(axisEnergy[detectorAxis]||0)*0.75));
-  detectorThreshold=detectorThreshold*0.96+target*0.04;
-
-  // Rearm only after signal has dropped. Prevents one stroke becoming two.
-  if(sig < detectorThreshold*0.55) detectorArmed=true;
-  const minGap=360; // max practical count ~166 SPM
-  if(detectorArmed && sig>detectorThreshold && detectorSignalPrev<=detectorThreshold && now-detectorLastStrokeAt>minGap){
-    detectorArmed=false;
-    if(detectorLastStrokeAt>0){
-      const iv=now-detectorLastStrokeAt;
-      if(iv>=360 && iv<=1800){
-        detectorIntervals.push(iv);
-        if(detectorIntervals.length>8)detectorIntervals.shift();
-      }
+  gpsStatus("GPS 測試中…","warn");
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      try{
+        const p=await navigator.permissions.query({name:"geolocation"});
+        gpsStatus("GPS 權限："+p.state+"，正在定位…","warn");
+      }catch(e){}
     }
-    detectorLastStrokeAt=now;
-    registerStroke(now);
-    detectorStatus("AUTO 穩定",true);
-  }
-  detectorSignalPrev=sig;
-}
-function strokeWatchdog(){
-  if(!running)return;
-  const now=performance.now();
-  if(detectorLastStrokeAt>0 && now-detectorLastStrokeAt>2200){
-    currentSpm=0;
-    detectorIntervals=[];
-    if($("spm")) $("spm").textContent="0";
-    detectorStatus("等待槳動");
-  }else if(detectorLastStrokeAt===0 && now>detectorLearnUntil){
-    currentSpm=0;
-    if($("spm")) $("spm").textContent="0";
-    detectorStatus("等待第一槳");
+    await ensureGpsReady();
+    alert("GPS 已取得。精度約 ±"+$("accuracy").textContent+" m。");
+  }catch(e){
+    alert("GPS 仍無法取得。畫面狀態："+$("gpsStatus").textContent+"。\\n\\n請到 iPhone「設定 → 隱私權與安全性 → 定位服務 → Safari 網站」，允許定位並開啟「精確位置」。");
   }
 }
-setInterval(strokeWatchdog,400);
-setInterval(()=>{
-  if(!running)return;
-  if(gpsLastFixAt && Date.now()-gpsLastFixAt>8000){
-    gpsReady=false;
-    gpsStatus("GPS 訊號中斷","bad");
+function checkSplits(){while(totalDistance>=nextSplit){splits.push({distance:nextSplit,time:nowElapsed()});nextSplit+=100;renderSplits()}}
+function renderSplits(){const box=$("splits");if(!splits.length){box.innerHTML='<div class="status">尚無分段紀錄</div>';return}box.innerHTML="";let p=0;splits.forEach(i=>{const r=document.createElement("div");r.className="split";r.innerHTML="<span>"+i.distance+" m</span><span>"+fmtTime(i.time-p)+"</span>";p=i.time;box.appendChild(r)})}
+function checkTarget(){const t=Number($("mode").value);if(running&&t>0&&totalDistance>=t)stopRun()}
+async function requestWakeLock(){try{if("wakeLock"in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}
+function releaseWakeLock(){try{if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}}
+async function countdownStart(){if(running)return;const b=$("countdown");b.style.display="block";for(let i=3;i>=1;i--){b.textContent=i;await new Promise(r=>setTimeout(r,1000))}b.textContent="GO!";await new Promise(r=>setTimeout(r,450));b.style.display="none";startRun()}
+
+function resetStrokeDetectorForNewRun(){
+  // 保留已取得的動作感測權限與事件監聽，只清除上一趟留下的判斷狀態。
+  lastStrokeTime=0;
+  lastPeakTime=0;
+  strokeTimes=[];
+  currentSpm=0;
+  averageSpm=0;
+  confidence=0;
+  filtered=0;
+  prevFiltered=0;
+  prevAxisVal=0;
+  noiseWindow=[];
+  peakWindow=[];
+  calibrating=false;
+  calibrationCount=0;
+  calibrationSamples=[];
+  $("spm").textContent="0";
+  $("avgSpm").textContent="0";
+  $("confidence").textContent="0";
+  $("confidenceBar").style.width="0%";
+  $("strokeState").textContent=motionEnabled?"待偵測":"待機";
+  if(motionEnabled){
+    $("motionStatus").textContent="AUTO 已就緒";
+    $("motionStatus").className="status good";
+    $("sensorStatus").textContent="動作感測：AUTO";
+    $("sensorStatus").className="status good";
   }
-},1000);
+}
 function startRun(){
 resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;
 running=true;startedAt=performance.now();lastPos=null;
 $("startBtn").textContent="停止訓練";$("startBtn").className="danger";
 startTimerLoop();requestWakeLock();
 start20();
-if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：與總槳數同步，等待第一槳…";
+if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：等待第一槳…";
 }
 function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
 function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
 function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
-async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",onMotion);motionEnabled=true;if(!window.__robustStrokeBound){window.addEventListener("devicemotion",robustMotionSample);window.__robustStrokeBound=true;}motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
+async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",onMotion);motionEnabled=true;motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
 function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
 function beginCalibration(){if(!motionEnabled){motionMsg("請先啟用自動槳頻","warn");return}calibrating=true;calibrationCount=0;calibrationSamples=[];axisScore={x:0,y:0,z:0};confidence=0;strokeTimes=[];lastStrokeTime=0;motionMsg("校正中 0/10","warn");$("strokeState").textContent="學習中"}
 function finishCalibration(){calibrating=false;const best=Object.entries(axisScore).sort((a,b)=>b[1]-a[1])[0];axis=best?best[0]:"x";$("axisLabel").textContent=axis.toUpperCase();motionMsg("校正完成，AUTO 偵測中","good");$("strokeState").textContent="待穩定"}
@@ -518,21 +518,31 @@ $("clearHistoryBtn").onclick=clearAllHistory;
 $("startBtn").onclick=async()=>{
 if(running){stopRun();return}
 $("startBtn").disabled=true;
-$("startBtn").textContent="GPS 定位中…";
+const oldText=$("startBtn").textContent;
 try{
   if(!motionEnabled) await enableMotion();
+  $("startBtn").textContent="GPS 定位中…";
   await ensureGpsReady();
   $("startBtn").textContent="準備開始";
-  countdownStart();
+  await countdownStart();
 }catch(e){
   $("startBtn").textContent="開始訓練";
-  alert("無法開始訓練：目前沒有取得 GPS 定位。\n\n請確認 iPhone「定位服務」與 Safari 網站的位置權限已允許，並開啟「精確位置」。");
+  alert("尚未取得 GPS，因此沒有開始訓練。\n\n目前狀態："+$("gpsStatus").textContent);
 }finally{
   $("startBtn").disabled=false;
+  if(!running)$("startBtn").textContent="開始訓練";
 }
-};$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
+};$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
 document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
+setInterval(()=>{
+  if(running && gpsLastFixAt && Date.now()-gpsLastFixAt>10000){
+    gpsReady=false;gpsStatus("GPS 訊號暫時中斷","bad");
+  }
+  if(running && lastStrokeTime && performance.now()-lastStrokeTime>2200){
+    currentSpm=0;$("spm").textContent="0";$("strokeState").textContent="等待槳動";
+  }
+},500);
 const savedSens=localStorage.getItem("dragonboatSensitivity");
 if(savedSens&&sensCfg[savedSens]){
   sensitivity=savedSens;
