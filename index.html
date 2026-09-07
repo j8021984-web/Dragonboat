@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111" />
+  <title>Dragon Boat Speedometer V1</title>
+  <style>
+    :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#0b0b0d; color:#fff; min-height:100vh; }
+    .wrap { max-width:760px; margin:0 auto; padding:18px 16px 28px; }
+    h1 { font-size:20px; margin:0 0 4px; letter-spacing:.04em; }
+    .sub { color:#aaa; font-size:13px; margin-bottom:14px; }
+    .panel { background:#17171b; border:1px solid #2a2a31; border-radius:18px; padding:16px; margin-bottom:12px; }
+    .speed { text-align:center; padding:18px 8px; }
+    .speed .value { font-size:76px; font-weight:800; line-height:.95; font-variant-numeric: tabular-nums; }
+    .speed .unit { color:#aaa; margin-top:8px; }
+    .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .metric { background:#101014; border-radius:14px; padding:14px; }
+    .metric .label { color:#999; font-size:12px; }
+    .metric .num { font-size:28px; font-weight:700; margin-top:4px; font-variant-numeric: tabular-nums; }
+    .controls { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    button, select { width:100%; border:0; border-radius:14px; padding:14px 12px; font-size:16px; font-weight:700; }
+    button.primary { background:#fff; color:#111; }
+    button.secondary { background:#2b2b32; color:#fff; }
+    button.danger { background:#3b1717; color:#ffb6b6; }
+    select { background:#2b2b32; color:#fff; margin-bottom:10px; }
+    .status { font-size:13px; color:#bbb; line-height:1.5; }
+    .split-row { display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid #292930; font-variant-numeric: tabular-nums; }
+    .split-row:last-child { border-bottom:0; }
+    .tiny { font-size:11px; color:#777; margin-top:10px; line-height:1.5; }
+    .good { color:#8ce99a; }
+    .warn { color:#ffd43b; }
+    .bad { color:#ff8787; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DRAGON BOAT SPEEDOMETER V1</h1>
+  <div class="sub">GPS 訓練測速器</div>
+
+  <div class="panel speed">
+    <div class="value" id="speed">0.0</div>
+    <div class="unit">km/h（平滑速度）</div>
+  </div>
+
+  <div class="panel">
+    <select id="mode">
+      <option value="200">200m 測試</option>
+      <option value="500" selected>500m 測試</option>
+      <option value="0">自由訓練</option>
+    </select>
+    <div class="grid">
+      <div class="metric"><div class="label">時間</div><div class="num" id="time">00:00.0</div></div>
+      <div class="metric"><div class="label">距離</div><div class="num"><span id="distance">0</span> m</div></div>
+      <div class="metric"><div class="label">平均速度</div><div class="num"><span id="avg">0.0</span></div><div class="label">km/h</div></div>
+      <div class="metric"><div class="label">最高穩定速度</div><div class="num"><span id="max">0.0</span></div><div class="label">km/h</div></div>
+      <div class="metric"><div class="label">500m 預估</div><div class="num" id="estimate">--:--.-</div></div>
+      <div class="metric"><div class="label">GPS 精度</div><div class="num"><span id="accuracy">--</span></div><div class="label">m</div></div>
+    </div>
+  </div>
+
+  <div class="panel controls">
+    <button class="primary" id="startBtn">開始</button>
+    <button class="secondary" id="resetBtn">重設</button>
+  </div>
+
+  <div class="panel">
+    <div class="status" id="status">尚未啟動 GPS。</div>
+    <div class="tiny">建議：把手機固定在船體中央附近、螢幕朝上，並在開闊水域使用。此版本採 3 秒內速度樣本的中位數＋移動平均，降低瞬時 GPS 飄動。</div>
+  </div>
+
+  <div class="panel">
+    <strong>100m 分段</strong>
+    <div id="splits" class="status" style="margin-top:8px;">尚無資料</div>
+  </div>
+
+  <div class="panel">
+    <strong>最近訓練</strong>
+    <div id="history" class="status" style="margin-top:8px;">尚無紀錄</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const speedEl=$('speed'), timeEl=$('time'), distanceEl=$('distance'), avgEl=$('avg'), maxEl=$('max'), estimateEl=$('estimate'), accuracyEl=$('accuracy'), statusEl=$('status'), splitsEl=$('splits'), historyEl=$('history');
+  let watchId=null, running=false, startTime=0, timerId=null, lastPos=null, totalDistance=0, speedSamples=[], smoothSamples=[], maxSpeed=0, splits=[], nextSplit=100, finished=false;
+
+  function fmtTime(ms){
+    if(!isFinite(ms) || ms<0) return '--:--.-';
+    const t=ms/1000, m=Math.floor(t/60), s=t-m*60;
+    return String(m).padStart(2,'0')+':'+s.toFixed(1).padStart(4,'0');
+  }
+  function haversine(a,b){
+    const R=6371000, toRad=x=>x*Math.PI/180;
+    const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon);
+    const la1=toRad(a.lat), la2=toRad(b.lat);
+    const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+  }
+  function median(arr){ const a=[...arr].sort((x,y)=>x-y); if(!a.length)return 0; const i=Math.floor(a.length/2); return a.length%2?a[i]:(a[i-1]+a[i])/2; }
+  function renderSplits(){
+    if(!splits.length){ splitsEl.textContent='尚無資料'; return; }
+    splitsEl.innerHTML=splits.map((s,i)=>`<div class="split-row"><span>${(i+1)*100} m</span><span>${fmtTime(s.elapsed)}</span><span>${(s.speed).toFixed(1)} km/h</span></div>`).join('');
+  }
+  function renderHistory(){
+    const h=JSON.parse(localStorage.getItem('dbSpeedHistory')||'[]');
+    if(!h.length){ historyEl.textContent='尚無紀錄'; return; }
+    historyEl.innerHTML=h.slice(0,5).map(x=>`<div class="split-row"><span>${x.mode}</span><span>${x.distance}m / ${x.time}</span><span>${x.avg} km/h</span></div>`).join('');
+  }
+  function saveHistory(){
+    if(totalDistance<20) return;
+    const h=JSON.parse(localStorage.getItem('dbSpeedHistory')||'[]');
+    h.unshift({date:new Date().toLocaleString(), mode:$('mode').value==='0'?'自由':$('mode').value+'m', distance:Math.round(totalDistance), time:fmtTime(performance.now()-startTime), avg:avgEl.textContent});
+    localStorage.setItem('dbSpeedHistory', JSON.stringify(h.slice(0,20)));
+    renderHistory();
+  }
+  function reset(){
+    if(running) stop();
+    finished=false; startTime=0; lastPos=null; totalDistance=0; speedSamples=[]; smoothSamples=[]; maxSpeed=0; splits=[]; nextSplit=100;
+    speedEl.textContent='0.0'; timeEl.textContent='00:00.0'; distanceEl.textContent='0'; avgEl.textContent='0.0'; maxEl.textContent='0.0'; estimateEl.textContent='--:--.-'; accuracyEl.textContent='--'; splitsEl.textContent='尚無資料'; statusEl.textContent='已重設。';
+  }
+  function start(){
+    if(running) return;
+    if(!navigator.geolocation){ statusEl.innerHTML='<span class="bad">此瀏覽器不支援 GPS。</span>'; return; }
+    running=true; finished=false; startTime=performance.now(); lastPos=null; $('startBtn').textContent='停止'; $('startBtn').className='danger';
+    timerId=setInterval(()=>{ if(running) timeEl.textContent=fmtTime(performance.now()-startTime); },100);
+    watchId=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true, maximumAge:0, timeout:10000});
+    statusEl.innerHTML='<span class="warn">正在取得高精度 GPS…</span>';
+  }
+  function stop(){
+    if(!running) return;
+    running=false; if(watchId!==null) navigator.geolocation.clearWatch(watchId); watchId=null; clearInterval(timerId); timerId=null;
+    $('startBtn').textContent='開始'; $('startBtn').className='primary'; saveHistory();
+    statusEl.innerHTML='<span class="good">測試已停止。</span>';
+  }
+  function onErr(e){ statusEl.innerHTML='<span class="bad">GPS 錯誤：'+e.message+'。請確認已允許定位。</span>'; }
+  function onPos(p){
+    if(!running) return;
+    const c=p.coords, now=performance.now(); accuracyEl.textContent=isFinite(c.accuracy)?Math.round(c.accuracy):'--';
+    const cur={lat:c.latitude, lon:c.longitude, t:p.timestamp, acc:c.accuracy};
+    if(lastPos){
+      const dt=(cur.t-lastPos.t)/1000;
+      const d=haversine(lastPos,cur);
+      if(dt>0 && d>=0){
+        const derived=d/dt; // m/s
+        let raw=isFinite(c.speed) && c.speed>=0 ? c.speed : derived;
+        if(raw<0.25) raw=0;
+        if(raw<12){
+          speedSamples.push({t:now,v:raw});
+          speedSamples=speedSamples.filter(x=>now-x.t<=3000);
+          const med=median(speedSamples.map(x=>x.v));
+          smoothSamples.push(med); if(smoothSamples.length>5) smoothSamples.shift();
+          const smooth=smoothSamples.reduce((a,b)=>a+b,0)/smoothSamples.length;
+          const kmh=smooth*3.6;
+          speedEl.textContent=kmh.toFixed(1);
+          maxSpeed=Math.max(maxSpeed,kmh); maxEl.textContent=maxSpeed.toFixed(1);
+
+          // distance guard: ignore unrealistic jumps and very poor fixes
+          if(d<25 && dt<5 && (!isFinite(c.accuracy) || c.accuracy<=25)) totalDistance+=d;
+          distanceEl.textContent=Math.round(totalDistance);
+          const elapsed=(now-startTime)/1000;
+          const avg=elapsed>0?(totalDistance/elapsed)*3.6:0; avgEl.textContent=avg.toFixed(1);
+          estimateEl.textContent=avg>0.5?fmtTime((500/(avg/3.6))*1000):'--:--.-';
+
+          while(totalDistance>=nextSplit){
+            const elapsedMs=now-startTime;
+            const prev=splits.length?splits[splits.length-1].elapsed:0;
+            const segMs=elapsedMs-prev;
+            splits.push({elapsed:elapsedMs, speed:(100/(segMs/1000))*3.6});
+            nextSplit+=100; renderSplits();
+          }
+          const target=parseInt($('mode').value,10);
+          if(target>0 && totalDistance>=target && !finished){ finished=true; statusEl.innerHTML='<span class="good">已完成 '+target+'m！成績 '+fmtTime(now-startTime)+'</span>'; stop(); }
+        }
+      }
+    }
+    lastPos=cur;
+    if(isFinite(c.accuracy)){
+      const cls=c.accuracy<=8?'good':c.accuracy<=15?'warn':'bad';
+      statusEl.innerHTML=`GPS 精度：<span class="${cls}">±${Math.round(c.accuracy)}m</span>｜建議 ±15m 內開始正式測試。`;
+    }
+  }
+
+  $('startBtn').addEventListener('click',()=>running?stop():start());
+  $('resetBtn').addEventListener('click',reset);
+  renderHistory();
+})();
+</script>
+</body>
+</html>
