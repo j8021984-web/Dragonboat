@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V6.8</title>
+<title>Dragon Boat Speedometer V6.9</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.8 · 連續訓練修正版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.9 · 槳頻強化版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -344,14 +344,89 @@ start20();
 if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：等待第一槳…";
 }
 function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
-function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain();rearmGpsAfterReset()}
+function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
 function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
-async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",onMotion);motionEnabled=true;motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
+async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",enhancedStrokeMotion);motionEnabled=true;motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
 function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
 function beginCalibration(){if(!motionEnabled){motionMsg("請先啟用自動槳頻","warn");return}calibrating=true;calibrationCount=0;calibrationSamples=[];axisScore={x:0,y:0,z:0};confidence=0;strokeTimes=[];lastStrokeTime=0;motionMsg("校正中 0/10","warn");$("strokeState").textContent="學習中"}
 function finishCalibration(){calibrating=false;const best=Object.entries(axisScore).sort((a,b)=>b[1]-a[1])[0];axis=best?best[0]:"x";$("axisLabel").textContent=axis.toUpperCase();motionMsg("校正完成，AUTO 偵測中","good");$("strokeState").textContent="待穩定"}
+
+let v69LastStrokeAt=0,v69Intervals=[],v69Noise=0.10,v69PrevSignal=0,v69PrevSlope=0,v69Peak=0;
+let v69SignalHistory=[],v69Confidence=0;
+
+function resetV69StrokeDetector(){
+  v69LastStrokeAt=0;v69Intervals=[];v69Noise=0.10;v69PrevSignal=0;v69PrevSlope=0;v69Peak=0;
+  v69SignalHistory=[];v69Confidence=0;
+  currentSpm=0;lastStrokeTime=0;
+}
+
+function medianV69(a){
+  if(!a.length)return 0;
+  const b=[...a].sort((x,y)=>x-y),m=Math.floor(b.length/2);
+  return b.length%2?b[m]:(b[m-1]+b[m])/2;
+}
+
+function enhancedStrokeMotion(e){
+  if(!motionEnabled||!running)return;
+  const a=e.acceleration||e.accelerationIncludingGravity;
+  if(!a)return;
+
+  const x=Number(a.x)||0,y=Number(a.y)||0,z=Number(a.z)||0;
+  // Magnitude is orientation-independent. Remove slow baseline with a short rolling mean.
+  const mag=Math.sqrt(x*x+y*y+z*z);
+  v69SignalHistory.push(mag);
+  if(v69SignalHistory.length>12)v69SignalHistory.shift();
+  const baseline=v69SignalHistory.reduce((s,v)=>s+v,0)/v69SignalHistory.length;
+  const sig=Math.abs(mag-baseline);
+
+  v69Noise=0.96*v69Noise+0.04*sig;
+  const threshold=Math.max(0.18,Math.min(1.8,v69Noise*2.2));
+  const slope=sig-v69PrevSignal;
+  if(slope>0)v69Peak=Math.max(v69Peak,sig);
+
+  const now=performance.now();
+  const typical=v69Intervals.length?medianV69(v69Intervals.slice(-7)):700;
+  // Dragon-boat practical cadence window: ~45–150 SPM.
+  const minGap=Math.max(380,typical*0.55);
+  const maxGap=Math.min(1400,typical*1.65);
+
+  // Detect a local peak. Once rhythm is learned, allow a slightly lower threshold in the expected time window.
+  const since=now-v69LastStrokeAt;
+  const expected=v69LastStrokeAt>0 && since>=minGap && since<=maxGap;
+  const effectiveThreshold=expected?threshold*0.72:threshold;
+  const peakEnded=(v69PrevSlope>0 && slope<=0);
+
+  if(peakEnded && v69Peak>=effectiveThreshold && (v69LastStrokeAt===0 || since>=minGap)){
+    if(v69LastStrokeAt>0){
+      const dt=since;
+      if(dt>=360 && dt<=1500){
+        v69Intervals.push(dt);
+        if(v69Intervals.length>10)v69Intervals.shift();
+        const med=medianV69(v69Intervals);
+        currentSpm=Math.round(60000/med);
+        currentSpm=Math.max(40,Math.min(160,currentSpm));
+        const deviations=v69Intervals.map(v=>Math.abs(v-med)/med);
+        const dev=deviations.length?deviations.reduce((s,v)=>s+v,0)/deviations.length:0;
+        v69Confidence=Math.round(Math.max(0,Math.min(99,100-dev*180)));
+      }
+    }
+    v69LastStrokeAt=now;
+    lastStrokeTime=now;
+    registerStroke();
+    $("spm").textContent=currentSpm||"--";
+    if($("strokeState"))$("strokeState").textContent=v69Confidence>=80?"穩定":v69Confidence>=60?"可用":"學習節奏";
+    if($("confidence"))$("confidence").textContent=v69Confidence+"%";
+    v69Peak=0;
+  } else if(peakEnded){
+    v69Peak=0;
+  }
+
+  v69PrevSlope=slope;
+  v69PrevSignal=sig;
+}
+
 function onMotion(e){if(!motionEnabled)return;const a=e.acceleration||e.accelerationIncludingGravity;if(!a)return;const vals={x:Number(a.x)||0,y:Number(a.y)||0,z:Number(a.z)||0};if(calibrating){axisScore.x+=Math.abs(vals.x);axisScore.y+=Math.abs(vals.y);axisScore.z+=Math.abs(vals.z)}
 const raw=vals[axis];filtered=0.82*filtered+0.18*raw;const hp=filtered-prevFiltered;prevFiltered=filtered;noiseWindow.push(Math.abs(hp));if(noiseWindow.length>80)noiseWindow.shift();const noise=Math.max(0.03,median(noiseWindow)+mad(noiseWindow));const cfg=sensCfg[sensitivity],th=noise*cfg.mult;const t=performance.now();
 peakWindow.push({v:Math.abs(hp),t});if(peakWindow.length>5)peakWindow.shift();
@@ -535,7 +610,7 @@ try{
   if(!motionEnabled) await enableMotion();
   $("startBtn").textContent="GPS 定位中…";
   await ensureGpsReady();
-  lastPos=null;speedSamples=[];
+  lastPos=null;speedSamples=[];resetV69StrokeDetector();
   $("startBtn").textContent="準備開始";
   await countdownStart();
 }catch(e){
