@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V6.1</title>
+<title>Dragon Boat Speedometer V6.2</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -47,7 +47,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.1 · 團隊訓練版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.2 · 團隊訓練版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -116,7 +116,6 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="metric"><div class="label">速度增加</div><div class="num"><span id="testDeltaSpeed">0.0</span></div></div><div class="metric"><div class="label">20 槳距離</div><div class="num"><span id="testDistance">0.0</span> m</div></div>
 </div>
 <div class="tiny" id="testAutoStatus" style="margin-top:10px">按「開始訓練」後，前 20 槳會自動分析。</div>
-<div style="margin-top:8px"><button class="secondary tap" id="tapStrokeBtn">手動記一槳</button></div>
 </div>
 
 <div class="panel">
@@ -223,7 +222,7 @@ $("startBtn").onclick=async()=>{
 if(running){stopRun();return}
 if(!motionEnabled) await enableMotion();
 countdownStart();
-};$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;$("tapStrokeBtn").onclick=()=>registerStroke(performance.now());
+};$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
 document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
 const savedSens=localStorage.getItem("dragonboatSensitivity");
