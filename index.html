@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V6.9</title>
+<title>Dragon Boat Speedometer V7.0</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V6.9 · 槳頻強化版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.0 · 槳頻診斷版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -103,6 +103,18 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="status" id="motionStatus">尚未啟用動作感測</div>
 <div class="progress"><div id="confidenceBar"></div></div>
 <div class="tiny">信心度：<span id="confidence">0</span>%｜主軸：<span id="axisLabel">未判定</span></div>
+<div style="margin-top:14px;padding:14px;border-radius:14px;background:#101116">
+  <div style="display:flex;justify-content:space-between;gap:12px">
+    <span>感測器訊號</span><strong id="motionDiagText">等待資料</strong>
+  </div>
+  <div style="height:10px;background:#2b2c33;border-radius:99px;overflow:hidden;margin-top:10px">
+    <div id="motionDiagBar" style="height:100%;width:0%;background:#fff;transition:width .08s linear"></div>
+  </div>
+  <div style="margin-top:9px;color:#9b9ba3;font-size:14px">
+    Motion事件：<span id="motionEvents">0</span> ｜ 訊號：<span id="motionSignal">0.00</span>
+  </div>
+</div>
+
 <div style="margin-top:10px"><button class="accent" id="motionBtn">允許動作感測</button></div>
 <details style="margin-top:8px">
 <summary class="status" style="cursor:pointer">槳頻設定／重新校正</summary>
@@ -120,7 +132,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="label" style="margin-top:12px">狀態</div><div class="num" style="font-size:20px" id="strokeState">待機</div>
 </div>
 </div>
-<div class="tiny">請固定手機。V6.3 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
+<div class="tiny">請固定手機。V7.0 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
 </div>
 
 <div class="panel">
@@ -348,11 +360,12 @@ function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];lastSe
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
 function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
-async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",enhancedStrokeMotion);motionEnabled=true;motionMsg("AUTO 已啟用，請先做 10 槳校正","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
+async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",enhancedStrokeMotion);motionEnabled=true;if($("motionBtn"))$("motionBtn").textContent="動作感測已允許";if($("motionDiagText"))$("motionDiagText").textContent="等待 Motion 資料";motionMsg("AUTO 已啟用，可直接開始偵測","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
 function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
 function beginCalibration(){if(!motionEnabled){motionMsg("請先啟用自動槳頻","warn");return}calibrating=true;calibrationCount=0;calibrationSamples=[];axisScore={x:0,y:0,z:0};confidence=0;strokeTimes=[];lastStrokeTime=0;motionMsg("校正中 0/10","warn");$("strokeState").textContent="學習中"}
 function finishCalibration(){calibrating=false;const best=Object.entries(axisScore).sort((a,b)=>b[1]-a[1])[0];axis=best?best[0]:"x";$("axisLabel").textContent=axis.toUpperCase();motionMsg("校正完成，AUTO 偵測中","good");$("strokeState").textContent="待穩定"}
 
+let motionEventCount=0,motionLastAt=0,motionDiagPeak=0;
 let v69LastStrokeAt=0,v69Intervals=[],v69Noise=0.10,v69PrevSignal=0,v69PrevSlope=0,v69Peak=0;
 let v69SignalHistory=[],v69Confidence=0;
 
@@ -369,13 +382,24 @@ function medianV69(a){
 }
 
 function enhancedStrokeMotion(e){
-  if(!motionEnabled||!running)return;
+  if(!motionEnabled)return;
   const a=e.acceleration||e.accelerationIncludingGravity;
   if(!a)return;
 
+  motionEventCount++;
+  motionLastAt=performance.now();
   const x=Number(a.x)||0,y=Number(a.y)||0,z=Number(a.z)||0;
+  const rawMag=Math.sqrt(x*x+y*y+z*z);
+  if($("motionEvents"))$("motionEvents").textContent=motionEventCount;
+  if($("motionSignal"))$("motionSignal").textContent=rawMag.toFixed(2);
+  if($("motionDiagBar")){
+    const pct=Math.max(2,Math.min(100,rawMag*8));
+    $("motionDiagBar").style.width=pct+"%";
+  }
+  if($("motionDiagText"))$("motionDiagText").textContent=rawMag>1.2?"有明顯動作":"有資料";
+  if(!running)return;
   // Magnitude is orientation-independent. Remove slow baseline with a short rolling mean.
-  const mag=Math.sqrt(x*x+y*y+z*z);
+  const mag=rawMag;
   v69SignalHistory.push(mag);
   if(v69SignalHistory.length>12)v69SignalHistory.shift();
   const baseline=v69SignalHistory.reduce((s,v)=>s+v,0)/v69SignalHistory.length;
@@ -624,6 +648,13 @@ try{
 document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
 setInterval(()=>{
+  if(motionEnabled && $("motionDiagText")){
+    const age=motionLastAt?performance.now()-motionLastAt:99999;
+    if(age>1800){
+      $("motionDiagText").textContent="沒有收到 Motion 資料";
+      $("motionDiagBar").style.width="0%";
+    }
+  }
   if(running && gpsLastFixAt && Date.now()-gpsLastFixAt>10000){
     gpsReady=false;gpsStatus("GPS 訊號暫時中斷","bad");
   }
