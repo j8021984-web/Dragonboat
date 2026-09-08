@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.5</title>
+<title>Dragon Boat Speedometer V7.6</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -50,7 +50,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 .historyActions button{padding:9px 8px;font-size:13px;border-radius:10px}
 .smallDanger{background:#511c1c;color:#ffd0d0}
 .historyTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.historyActions{grid-template-columns:1fr 1fr 1fr}
+.historyActions{grid-template-columns:repeat(3,1fr)}
 .detailBox{display:none;margin-top:10px;border-top:1px solid #2a2a31;padding-top:10px}
 .detailBox.open{display:block}
 .detailGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.5 · 數據匯出版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.6 · GPX軌跡匯出版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -173,7 +173,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 
 <script>
 const $=id=>document.getElementById(id);
-let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null;
+let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],runTrack=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null;
 let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
 let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
@@ -218,6 +218,20 @@ function onPosition(pos){
     }
   }
   lastPos=cur;
+
+  if(running){
+    runTrack.push({
+      lat:c.latitude,
+      lon:c.longitude,
+      time:new Date(pos.timestamp||Date.now()).toISOString(),
+      accuracy:acc,
+      speedKmh:(isFinite(gpsSpeed)&&gpsSpeed>=0)?gpsSpeed:null,
+      distanceM:totalDistance,
+      spm:currentSpm||0,
+      strokes:totalStrokes||0
+    });
+    if(runTrack.length>20000)runTrack.shift();
+  }
 
   if(isFinite(gpsSpeed)&&gpsSpeed>=0&&gpsSpeed<=40){
     speedSamples.push(gpsSpeed);
@@ -353,7 +367,7 @@ function resetStrokeDetectorForNewRun(){
   }
 }
 function startRun(){
-resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;
+resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;
 running=true;startedAt=performance.now();lastPos=null;
 $("startBtn").textContent="停止訓練";$("startBtn").className="danger";
 startTimerLoop();requestWakeLock();
@@ -361,7 +375,7 @@ start20();
 if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：等待第一槳…";
 }
 function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
-function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
+function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
 function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
@@ -517,7 +531,8 @@ function saveTeamRecord(){
   twentyStartSpeed:testStrokeCount>=20?testStartSpeed:null,
   twentyEndSpeed:testStrokeCount>=20?testEndSpeed:null,
   splits:splits.map(x=>({distance:x.distance,time:x.time})),
-  series:runSeries.slice()
+  series:runSeries.slice(),
+  track:runTrack.slice()
  };
  const arr=getHistory();
  arr.unshift(rec);
@@ -581,7 +596,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.5",
+    version:"7.6",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -595,6 +610,68 @@ function exportOneCsv(index){
   const header=["日期時間","隊伍","訓練名稱","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
   const csv=[header,recordToCsvRow(r)].map(row=>row.map(csvEscape).join(",")).join("\n");
   downloadTextFile("dragonboat-session-"+(index+1)+".csv",csv,"text/csv;charset=utf-8");
+}
+
+function xmlEscape(v){
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&apos;");
+}
+function buildGpx(r){
+  const track=Array.isArray(r.track)?r.track:[];
+  if(!track.length)return "";
+  const name=xmlEscape((r.team||"Dragon Boat")+" - "+(r.session||r.name||"Training"));
+  const trkpts=track.map(p=>{
+    const lat=Number(p.lat),lon=Number(p.lon);
+    if(!isFinite(lat)||!isFinite(lon))return "";
+    const t=p.time?`<time>${xmlEscape(p.time)}</time>`:"";
+    const acc=isFinite(Number(p.accuracy))?`<db:accuracy>${Number(p.accuracy).toFixed(1)}</db:accuracy>`:"";
+    const spd=isFinite(Number(p.speedKmh))?`<db:speed_kmh>${Number(p.speedKmh).toFixed(2)}</db:speed_kmh>`:"";
+    const dist=isFinite(Number(p.distanceM))?`<db:distance_m>${Number(p.distanceM).toFixed(1)}</db:distance_m>`:"";
+    const spm=isFinite(Number(p.spm))?`<db:spm>${Math.round(Number(p.spm))}</db:spm>`:"";
+    const strokes=isFinite(Number(p.strokes))?`<db:strokes>${Math.round(Number(p.strokes))}</db:strokes>`:"";
+    const ext=(acc||spd||dist||spm||strokes)?`<extensions>${acc}${spd}${dist}${spm}${strokes}</extensions>`:"";
+    return `<trkpt lat="${lat.toFixed(7)}" lon="${lon.toFixed(7)}">${t}${ext}</trkpt>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1"
+ creator="Dragon Boat Speedometer V7.6"
+ xmlns="http://www.topografix.com/GPX/1/1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:db="https://example.com/dragonboat"
+ xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata><name>${name}</name></metadata>
+  <trk><name>${name}</name><trkseg>${trkpts}</trkseg></trk>
+</gpx>`;
+}
+function safeFilenamePart(s){
+  return String(s||"training").replace(/[\\/:*?"<>|]+/g,"-").trim().slice(0,60)||"training";
+}
+function exportRecordGpx(index){
+  const rows=historyRecords();
+  const r=rows[index];
+  if(!r){alert("找不到這筆訓練紀錄。");return}
+  if(!Array.isArray(r.track)||!r.track.length){
+    alert("這筆紀錄沒有 GPS 軌跡。V7.6 以前完成的舊紀錄無法補回完整 GPX。");
+    return;
+  }
+  const gpx=buildGpx(r);
+  const date=safeFilenamePart(r.date||r.datetime||new Date().toISOString().slice(0,10));
+  const name=safeFilenamePart(r.session||r.name||"training");
+  downloadTextFile(`dragonboat-${date}-${name}.gpx`,gpx,"application/gpx+xml;charset=utf-8");
+}
+function exportLatestGpx(){
+  const rows=historyRecords();
+  if(!rows.length){alert("目前沒有訓練紀錄。");return}
+  const idx=rows.findIndex(r=>Array.isArray(r.track)&&r.track.length);
+  if(idx<0){
+    alert("目前的紀錄都沒有 GPS 軌跡。請用 V7.6 完成一趟新的訓練後再匯出 GPX。");
+    return;
+  }
+  exportRecordGpx(idx);
 }
 function renderHistory(){
  const box=$("teamHistory"),arr=getHistory();
@@ -616,6 +693,8 @@ function renderHistory(){
    '</div></div></div>'+
    '<div class="historyActions"><button class="secondary" onclick="toggleHistoryDetail('+realIndex+',this)">詳細</button>'+
    '<button class="secondary" onclick="editHistoryRecord('+realIndex+')">編輯</button>'+
+   '<button class="secondary" onclick="exportOneCsv('+realIndex+')">CSV</button>'+
+   '<button class="secondary" onclick="exportRecordGpx('+realIndex+')">GPX</button>'+
    '<button class="smallDanger" onclick="deleteHistoryRecord('+realIndex+')">刪除</button></div>'+
    '<div class="detailBox" id="detail-'+realIndex+'"></div>';
   box.appendChild(card);
@@ -740,7 +819,7 @@ try{
   if(!motionEnabled) await enableMotion();
   $("startBtn").textContent="GPS 定位中…";
   await ensureGpsReady();
-  lastPos=null;speedSamples=[];resetV69StrokeDetector();
+  lastPos=null;speedSamples=[];runTrack=[];resetV69StrokeDetector();
   $("startBtn").textContent="準備開始";
   await countdownStart();
 }catch(e){
@@ -750,7 +829,7 @@ try{
   $("startBtn").disabled=false;
   if(!running)$("startBtn").textContent="開始訓練";
 }
-};$("exportCsvBtn").onclick=exportAllCsv;$("exportJsonBtn").onclick=exportAllJson;$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
+};$("exportCsvBtn").onclick=exportAllCsv;$("exportJsonBtn").onclick=exportAllJson;$("exportLatestGpxBtn").onclick=exportLatestGpx;$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
 document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
 setInterval(()=>{
