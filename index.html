@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.8.2</title>
+<title>Dragon Boat Speedometer V7.8.3</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.2 · GPX資料讀取修正版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.3 · 單筆GPX修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -610,7 +610,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.8.2",
+    version:"7.8.3",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -697,7 +697,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.8.2"
+ creator="Dragon Boat Speedometer V7.8.3"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -709,25 +709,34 @@ function buildGpx(r){
 function safeFilenamePart(s){
   return String(s||"training").replace(/[\\/:*?"<>|]+/g,"-").trim().slice(0,60)||"training";
 }
-function exportRecordGpxById(id,fallbackIndex){
-  const rows=getHistory();
-  let index=id?rows.findIndex(r=>r&&r.id===id):-1;
-  if(index<0)index=fallbackIndex;
-  return exportRecordGpx(index);
+
+function exportRenderedRecordGpx(btn){
+  try{
+    const rows=getHistory();
+    const raw=btn&&btn.dataset?Number(btn.dataset.gpxIndex):NaN;
+    if(!Number.isInteger(raw)||raw<0||raw>=rows.length){
+      alert("找不到這筆訓練紀錄。");
+      return;
+    }
+    const r=rows[raw];
+    return exportGpxFromRecord(r);
+  }catch(err){
+    alert("GPX 匯出失敗："+(err&&err.message?err.message:"未知錯誤"));
+  }
 }
-async function exportRecordGpx(index){
-  const rows=historyRecords();
-  const r=rows[index];
-  if(!r){alert("找不到這筆訓練紀錄。");return}
+async function exportGpxFromRecord(r){
+  if(!r||typeof r!=="object"){
+    alert("找不到這筆訓練紀錄。");
+    return;
+  }
   if(!Array.isArray(r.track)||!r.track.length){
-    alert("這筆紀錄沒有 GPS 軌跡。V7.8 修正前若測驗時 GPS 記錄中斷，該筆舊紀錄無法補回完整 GPX；請用 V7.8 完成一趟新的訓練。");
+    alert("這筆紀錄沒有 GPS 軌跡。若這筆是在 GPX 修正前完成，軌跡可能沒有被保存。");
     return;
   }
   const gpx=buildGpx(r);
   const date=safeFilenamePart(r.date||r.datetime||new Date().toISOString().slice(0,10));
   const name=safeFilenamePart(r.session||r.name||"training");
   const filename=`dragonboat-${date}-${name}.gpx`;
-
   try{
     if(typeof File!=="undefined" && navigator.share && navigator.canShare){
       const file=new File([gpx],filename,{type:"application/gpx+xml"});
@@ -737,9 +746,20 @@ async function exportRecordGpx(index){
       }
     }
   }catch(err){
-    if(err && err.name==="AbortError")return;
+    if(err&&err.name==="AbortError")return;
   }
   downloadTextFile(filename,gpx,"application/gpx+xml;charset=utf-8");
+}
+function exportRecordGpxById(id,fallbackIndex){
+  const rows=getHistory();
+  let index=id?rows.findIndex(r=>r&&r.id===id):-1;
+  if(index<0)index=fallbackIndex;
+  return exportRecordGpx(index);
+}
+async function exportRecordGpx(index){
+  const rows=getHistory();
+  const r=rows[index];
+  return exportGpxFromRecord(r);
 }
 function exportLatestGpx(){
   const rows=historyRecords();
@@ -772,7 +792,7 @@ function renderHistory(){
    '<div class="historyActions"><button class="secondary" onclick="toggleHistoryDetail('+realIndex+',this)">詳細</button>'+
    '<button class="secondary" onclick="editHistoryRecord('+realIndex+')">編輯</button>'+
    '<button class="secondary" onclick="exportOneCsv('+realIndex+')">CSV</button>'+
-   '<button class="secondary" onclick="exportRecordGpxById('+JSON.stringify(r.id||"")+','+realIndex+')">GPX</button>'+
+   '<button class="secondary" data-gpx-index="'+realIndex+'" onclick="exportRenderedRecordGpx(this)">GPX</button>'+
    '<button class="smallDanger" onclick="deleteHistoryRecord('+realIndex+')">刪除</button></div>'+
    '<div class="detailBox" id="detail-'+realIndex+'"></div>';
   box.appendChild(card);
