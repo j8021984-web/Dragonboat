@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.8</title>
+<title>Dragon Boat Speedometer V7.8.1</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8 · 即時速度／GPX修正版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.1 · GPX匯出修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -566,7 +566,10 @@ function downloadTextFile(filename,text,type){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function historyRecords(){
-  try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]")}catch(e){return []}
+  try{
+    const h=loadHistory();
+    return Array.isArray(h.records)?h.records:[];
+  }catch(e){return []}
 }
 function recordToCsvRow(r){
   const splits=Array.isArray(r.splits)?r.splits:[];
@@ -607,7 +610,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.8",
+    version:"7.8.1",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -661,7 +664,9 @@ function handleBackupFile(e){
       });
       existing.sort((a,b)=>(Date.parse(b.date||b.datetime||b.createdAt||b.startTime||"")||0)-(Date.parse(a.date||a.datetime||a.createdAt||a.startTime||"")||0));
       const kept=existing.slice(0,100);
-      localStorage.setItem(HISTORY_KEY,JSON.stringify(kept));
+      const h=loadHistory();
+      h.records=kept;
+      saveHistory(h);
       renderHistory();
       alert(`匯入完成：新增 ${added} 筆，略過 ${dup} 筆重複紀錄。`);
     }catch(err){alert("匯入失敗："+(err.message||"JSON 格式錯誤"))}
@@ -694,7 +699,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.8"
+ creator="Dragon Boat Speedometer V7.8.1"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
