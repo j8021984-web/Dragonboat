@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.8.5</title>
+<title>Dragon Boat Speedometer V7.9</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -60,17 +60,54 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 .chartTitle{font-size:12px;color:#aaa;margin-bottom:5px}
 .chart{width:100%;height:120px;display:block}
 .detailSplit{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #222}
+
+.tabNav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;position:sticky;top:0;z-index:20;background:#0c0c0f;padding:8px 0}
+.tabBtn{padding:12px 8px;border-radius:12px;border:1px solid #333;background:#15151a;color:#bbb;font-weight:800}
+.tabBtn.active{background:#fff;color:#111;border-color:#fff}
+.appPage{display:none}.appPage.active{display:block}
+.memberCard{background:#101014;border-radius:14px;padding:12px;margin-top:9px}
+.memberName{font-size:16px;font-weight:800}
+.memberMeta{font-size:13px;color:#aaa;line-height:1.55;margin-top:5px}
+.memberActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.formField{margin-top:8px}
+.formField label{display:block;font-size:12px;color:#aaa;margin-bottom:5px}
+.formField input,.formField select,.formField textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:15px;box-sizing:border-box}
+.formField textarea{min-height:72px;resize:vertical}
+@media(max-width:520px){.formGrid{grid-template-columns:1fr}}
+
 @media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}.hero .v{font-size:100px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.5 · GPX軌跡狀態＋150m</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.9 · 即時速度＋隊員資料庫＋分頁</div></div><div class="ver" id="clock"></div></div>
+<div class="tabNav">
+  <button class="tabBtn active" data-page="training">訓練</button>
+  <button class="tabBtn" data-page="history">訓練紀錄</button>
+  <button class="tabBtn" data-page="members">隊員資料庫</button>
+</div>
+<div class="appPage active" id="page-training">
 
-<div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
+
+<div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜即時速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
 
 <div class="panel">
+<div class="grid" style="margin-bottom:10px">
+<div class="metric">
+  <div class="label">訓練隊員</div>
+  <select id="memberSelect" style="width:100%;margin-top:6px"><option value="">未指定隊員</option></select>
+</div>
+<div class="metric">
+  <div class="label">即時速度反應</div>
+  <select id="speedResponse" style="width:100%;margin-top:6px">
+    <option value="fast" selected>快速（建議）</option>
+    <option value="balanced">平衡</option>
+    <option value="stable">穩定</option>
+  </select>
+</div>
+</div>
 <div class="grid" style="margin-bottom:10px">
 <div class="metric"><div class="label">隊伍／組合</div><input id="teamName" value="黃金沒力號" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
 <div class="metric"><div class="label">訓練標籤</div><input id="sessionName" placeholder="例如：比賽配置 A" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
@@ -154,6 +191,16 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="tiny" id="testAutoStatus" style="margin-top:10px">按「開始訓練」後，前 20 槳會自動分析。</div>
 </div>
 
+<div class="panel"><div class="label">每 100m 分段</div><div id="splits"><div class="status">尚無分段紀錄</div></div></div>
+<div class="panel">
+<div class="label">GPS / 感測狀態</div>
+<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><div class="tiny" id="trackStatus">GPX 軌跡點：0</div><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
+<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。</div>
+<div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
+</div>
+
+</div>
+<div class="appPage" id="page-history">
 <div class="panel">
 <div class="label">團隊訓練紀錄（本機）</div>
 <div id="teamHistory"><div class="status">尚無訓練紀錄</div></div>
@@ -163,7 +210,6 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </div>
 <div class="tiny">每筆紀錄可查看詳細分析、編輯或刪除。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。</div>
 </div>
-<div class="panel"><div class="label">每 100m 分段</div><div id="splits"><div class="status">尚無分段紀錄</div></div></div>
 <div class="panel">
 <div class="label">資料備份／匯出</div>
 <div class="historyTools" style="margin-top:10px">
@@ -175,12 +221,33 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </div>
 <div class="tiny">更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。</div>
 </div>
-<div class="panel">
-<div class="label">GPS / 感測狀態</div>
-<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><div class="tiny" id="trackStatus">GPX 軌跡點：0</div><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
-<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。</div>
-<div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
+
 </div>
+<div class="appPage" id="page-members">
+<div class="panel">
+  <div class="label">新增／編輯隊員</div>
+  <input type="hidden" id="memberEditId">
+  <div class="formGrid">
+    <div class="formField"><label>姓名 *</label><input id="memberName" placeholder="例如：陳建名"></div>
+    <div class="formField"><label>暱稱</label><input id="memberNickname" placeholder="選填"></div>
+    <div class="formField"><label>側別</label><select id="memberSide"><option value="">未指定</option><option value="左">左槳</option><option value="右">右槳</option></select></div>
+    <div class="formField"><label>位置</label><input id="memberPosition" placeholder="例如：頭槳、2號位"></div>
+    <div class="formField"><label>身高（cm）</label><input id="memberHeight" type="number" inputmode="decimal" placeholder="175"></div>
+    <div class="formField"><label>槳長（cm）</label><input id="memberPaddleLength" type="number" inputmode="decimal" placeholder="例如：130"></div>
+  </div>
+  <div class="formField"><label>備註</label><textarea id="memberNote" placeholder="比賽配置、技術重點、受測備註等"></textarea></div>
+  <div class="historyTools">
+    <button class="primary" id="saveMemberBtn">儲存隊員</button>
+    <button class="secondary" id="cancelMemberEditBtn">清除表單</button>
+  </div>
+</div>
+<div class="panel">
+  <div class="label">隊員名單</div>
+  <div id="memberList"><div class="status">尚無隊員資料</div></div>
+  <div class="tiny">隊員資料儲存在本機，也會一起包含在 V7.9 的 JSON 完整備份中。</div>
+</div>
+</div>
+
 </div>
 
 <script>
@@ -194,7 +261,18 @@ function nowElapsed(){return running?elapsedBefore+(performance.now()-startedAt)
 function updateClock(){$("clock").textContent=new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}setInterval(updateClock,1000);updateClock();
 function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
 function mad(a){if(a.length<3)return 0;const m=median(a);return median(a.map(v=>Math.abs(v-m)))}
-function smoothSpeed(){return median(speedSamples.slice(-7))}
+let speedResponseMode=localStorage.getItem("dragonboatSpeedResponse")||"fast";
+function smoothSpeed(){
+  if(!speedSamples.length)return 0;
+  const latest=speedSamples[speedSamples.length-1]||0;
+  if(speedResponseMode==="stable")return median(speedSamples.slice(-7));
+  if(speedResponseMode==="balanced"){
+    const med=median(speedSamples.slice(-5));
+    return latest*0.45+med*0.55;
+  }
+  const med=median(speedSamples.slice(-3));
+  return latest*0.68+med*0.32;
+}
 function haversine(a,b){const R=6371000,l1=a.latitude*Math.PI/180,l2=b.latitude*Math.PI/180,dl=(b.latitude-a.latitude)*Math.PI/180,dn=(b.longitude-a.longitude)*Math.PI/180,x=Math.sin(dl/2)**2+Math.cos(l1)*Math.cos(l2)*Math.sin(dn/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 function updateMain(){const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
 if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSecond=sec;runSeries.push({t:e,d:totalDistance,speed:sp,spm:currentSpm});if(runSeries.length>3600)runSeries.shift()}}}
@@ -519,6 +597,102 @@ const raw=vals[axis];filtered=0.82*filtered+0.18*raw;const hp=filtered-prevFilte
 peakWindow.push({v:Math.abs(hp),t});if(peakWindow.length>5)peakWindow.shift();
 if(Math.abs(hp)>th){const prevIntervals=[];for(let i=1;i<strokeTimes.length;i++)prevIntervals.push(strokeTimes[i]-strokeTimes[i-1]);const medI=median(prevIntervals.slice(-6));let rhythmOK=true;if(medI&&lastStrokeTime){const dt=t-lastStrokeTime;rhythmOK=dt>medI*0.58&&dt<medI*1.55}if(rhythmOK&&(!lastPeakTime||t-lastPeakTime>cfg.minGap)){lastPeakTime=t;registerStroke(t)}}}
 
+
+const MEMBER_KEY="dragonboatMembersV1";
+function getMembers(){
+  try{return JSON.parse(localStorage.getItem(MEMBER_KEY)||"[]")}catch(e){return[]}
+}
+function setMembers(arr){
+  localStorage.setItem(MEMBER_KEY,JSON.stringify(arr));
+}
+function renderMemberSelect(){
+  const sel=$("memberSelect");
+  if(!sel)return;
+  const current=sel.value;
+  const members=getMembers();
+  sel.innerHTML='<option value="">未指定隊員</option>'+members.map(m=>
+    '<option value="'+escapeHtml(m.id)+'">'+escapeHtml(m.name)+(m.nickname?'（'+escapeHtml(m.nickname)+'）':'')+'</option>'
+  ).join("");
+  if(members.some(m=>m.id===current))sel.value=current;
+}
+function clearMemberForm(){
+  $("memberEditId").value="";
+  $("memberName").value="";
+  $("memberNickname").value="";
+  $("memberSide").value="";
+  $("memberPosition").value="";
+  $("memberHeight").value="";
+  $("memberPaddleLength").value="";
+  $("memberNote").value="";
+  $("saveMemberBtn").textContent="儲存隊員";
+}
+function saveMember(){
+  const name=$("memberName").value.trim();
+  if(!name){alert("請輸入隊員姓名。");return}
+  const arr=getMembers(),id=$("memberEditId").value||("m-"+Date.now()+"-"+Math.random().toString(36).slice(2,7));
+  const rec={
+    id,name,
+    nickname:$("memberNickname").value.trim(),
+    side:$("memberSide").value,
+    position:$("memberPosition").value.trim(),
+    height:Number($("memberHeight").value)||null,
+    paddleLength:Number($("memberPaddleLength").value)||null,
+    note:$("memberNote").value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  const i=arr.findIndex(x=>x.id===id);
+  if(i>=0)arr[i]=rec;else arr.push(rec);
+  setMembers(arr);clearMemberForm();renderMembers();renderMemberSelect();
+}
+function editMember(id){
+  const m=getMembers().find(x=>x.id===id);if(!m)return;
+  $("memberEditId").value=m.id;
+  $("memberName").value=m.name||"";
+  $("memberNickname").value=m.nickname||"";
+  $("memberSide").value=m.side||"";
+  $("memberPosition").value=m.position||"";
+  $("memberHeight").value=m.height||"";
+  $("memberPaddleLength").value=m.paddleLength||"";
+  $("memberNote").value=m.note||"";
+  $("saveMemberBtn").textContent="更新隊員";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function deleteMember(id){
+  const arr=getMembers(),m=arr.find(x=>x.id===id);if(!m)return;
+  if(!confirm("確定刪除隊員「"+m.name+"」嗎？既有訓練紀錄中的姓名快照不會被刪除。"))return;
+  setMembers(arr.filter(x=>x.id!==id));renderMembers();renderMemberSelect();
+}
+function renderMembers(){
+  const box=$("memberList"),arr=getMembers();
+  if(!box)return;
+  if(!arr.length){box.innerHTML='<div class="status">尚無隊員資料</div>';return}
+  box.innerHTML=arr.map(m=>
+    '<div class="memberCard"><div class="memberName">'+escapeHtml(m.name)+(m.nickname?'｜'+escapeHtml(m.nickname):'')+'</div>'+
+    '<div class="memberMeta">'+
+    (m.side?'側別：'+escapeHtml(m.side)+'槳<br>':'')+
+    (m.position?'位置：'+escapeHtml(m.position)+'<br>':'')+
+    (m.height?'身高：'+m.height+' cm<br>':'')+
+    (m.paddleLength?'槳長：'+m.paddleLength+' cm<br>':'')+
+    (m.note?'備註：'+escapeHtml(m.note):'')+
+    '</div><div class="memberActions">'+
+    '<button class="secondary" onclick="editMember('+JSON.stringify(m.id)+')">編輯</button>'+
+    '<button class="smallDanger" onclick="deleteMember('+JSON.stringify(m.id)+')">刪除</button>'+
+    '</div></div>'
+  ).join("");
+}
+function selectedMemberSnapshot(){
+  const id=$("memberSelect")?$("memberSelect").value:"";
+  const m=getMembers().find(x=>x.id===id);
+  return m?{id:m.id,name:m.name,nickname:m.nickname||"",side:m.side||"",position:m.position||"",height:m.height||null,paddleLength:m.paddleLength||null}:null;
+}
+function showPage(name){
+  document.querySelectorAll(".appPage").forEach(p=>p.classList.toggle("active",p.id==="page-"+name));
+  document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  if(name==="history")renderHistory();
+  if(name==="members")renderMembers();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
 function getHistory(){
  try{return JSON.parse(localStorage.getItem("dragonboatTeamHistory")||"[]")}catch(e){return[]}
 }
@@ -532,6 +706,7 @@ function saveTeamRecord(){
   at:new Date().toISOString(),
   team:$("teamName").value.trim()||"未命名隊伍",
   session:$("sessionName").value.trim()||"一般訓練",
+  member:selectedMemberSnapshot(),
   mode:Number($("mode").value),
   time:elapsedBefore,
   distance:totalDistance,
@@ -586,6 +761,7 @@ function recordToCsvRow(r){
     r.date||r.datetime||r.createdAt||"",
     r.team||"",
     r.session||r.name||"",
+    (r.member&&r.member.name)||"",
     r.mode||r.target||"",
     r.distance??"",
     r.duration??r.time??"",
@@ -603,7 +779,7 @@ function recordToCsvRow(r){
 function exportAllCsv(){
   const rows=historyRecords();
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
-  const header=["日期時間","隊伍","訓練名稱","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
+  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
   const csv=[header,...rows.map(recordToCsvRow)].map(row=>row.map(csvEscape).join(",")).join("\n");
   const d=new Date().toISOString().slice(0,10);
   downloadTextFile("dragonboat-training-"+d+".csv",csv,"text/csv;charset=utf-8");
@@ -613,9 +789,10 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.8.5",
+    version:"7.9",
     exportedAt:new Date().toISOString(),
-    records:rows
+    records:rows,
+    members:getMembers()
   };
   const d=new Date().toISOString().slice(0,10);
   downloadTextFile("dragonboat-training-backup-"+d+".json",JSON.stringify(payload,null,2),"application/json;charset=utf-8");
@@ -624,7 +801,7 @@ function exportOneCsv(index){
   const rows=historyRecords();
   const r=rows[index];
   if(!r){alert("找不到這筆訓練紀錄。");return}
-  const header=["日期時間","隊伍","訓練名稱","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
+  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
   const csv=[header,recordToCsvRow(r)].map(row=>row.map(csvEscape).join(",")).join("\n");
   downloadTextFile("dragonboat-session-"+(index+1)+".csv",csv,"text/csv;charset=utf-8");
 }
@@ -655,6 +832,7 @@ function handleBackupFile(e){
     try{
       const data=JSON.parse(String(reader.result||""));
       const incoming=normalizeBackupRecords(data);
+      const incomingMembers=(data&&Array.isArray(data.members))?data.members:[];
       if(!incoming)throw new Error("無法辨識備份格式");
       if(!confirm(`找到 ${incoming.length} 筆紀錄。將與目前資料合併並略過重複紀錄，是否繼續？`))return;
       const existing=historyRecords(), seen=new Set(existing.map(recordFingerprint));
@@ -668,6 +846,17 @@ function handleBackupFile(e){
       existing.sort((a,b)=>(Date.parse(b.date||b.datetime||b.createdAt||b.startTime||"")||0)-(Date.parse(a.date||a.datetime||a.createdAt||a.startTime||"")||0));
       const kept=existing.slice(0,100);
       setHistory(kept);
+      if(incomingMembers.length){
+        const existingMembers=getMembers(),memberIds=new Set(existingMembers.map(m=>m.id)),memberNames=new Set(existingMembers.map(m=>m.name));
+        incomingMembers.forEach(m=>{
+          if(!m||!m.name)return;
+          if((m.id&&memberIds.has(m.id))||memberNames.has(m.name))return;
+          existingMembers.push(m);
+          if(m.id)memberIds.add(m.id);memberNames.add(m.name);
+        });
+        setMembers(existingMembers);
+        renderMembers();renderMemberSelect();
+      }
       renderHistory();
       alert(`匯入完成：新增 ${added} 筆，略過 ${dup} 筆重複紀錄。`);
     }catch(err){alert("匯入失敗："+(err.message||"JSON 格式錯誤"))}
@@ -700,7 +889,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.8.5"
+ creator="Dragon Boat Speedometer V7.9"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -786,7 +975,7 @@ function renderHistory(){
   card.className="historyCard";
   card.innerHTML=
    '<div class="historyHead"><div><div class="historyTitle">'+escapeHtml(r.team||"未命名隊伍")+'｜'+escapeHtml(r.session||"一般訓練")+'</div>'+
-   '<div class="historyMeta">'+d.toLocaleString("zh-TW")+'<br>'+
+   '<div class="historyMeta">'+d.toLocaleString("zh-TW")+'<br>'+(r.member&&r.member.name?'隊員 '+escapeHtml(r.member.name)+(r.member.side?'｜'+escapeHtml(r.member.side)+'槳':'')+'<br>':'')+
    '距離 '+Number(r.distance||0).toFixed(1)+' m｜時間 '+fmtTime(Number(r.time||0))+'<br>'+
    '平均 '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜最高 '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
    '平均槳頻 '+Math.round(Number(r.avgSpm||0))+' SPM｜總槳數 '+Math.round(Number(r.strokes||0))+
@@ -910,6 +1099,17 @@ function clearAllHistory(){
  renderHistory();
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+document.querySelectorAll(".tabBtn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+$("saveMemberBtn").onclick=saveMember;
+$("cancelMemberEditBtn").onclick=clearMemberForm;
+$("speedResponse").value=speedResponseMode;
+$("speedResponse").onchange=()=>{
+  speedResponseMode=$("speedResponse").value;
+  localStorage.setItem("dragonboatSpeedResponse",speedResponseMode);
+  updateMain();
+};
+
 $("showAllHistoryBtn").onclick=()=>{showAllHistory=!showAllHistory;renderHistory()};
 $("clearHistoryBtn").onclick=clearAllHistory;
 $("startBtn").onclick=async()=>{
@@ -953,7 +1153,7 @@ if(savedSens&&sensCfg[savedSens]){
   sensitivity=savedSens;
   document.querySelectorAll("[data-sens]").forEach(x=>x.classList.toggle("active",x.dataset.sens===savedSens));
 }
-gpsStatus("尚未定位","warn");resetAll();renderHistory();appInitialized=true;
+gpsStatus("尚未定位","warn");resetAll();renderHistory();renderMembers();renderMemberSelect();appInitialized=true;
 </script>
 </body>
 </html>
