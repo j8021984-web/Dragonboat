@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a0c"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Dragon Boat Speedometer V7.9</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0c;color:#fff;min-height:100vh}
+.wrap{max-width:860px;margin:auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
+.title{font-weight:900;letter-spacing:.05em}
+.ver{color:#8f8f98;font-size:12px}
+.panel{background:#16161a;border:1px solid #292930;border-radius:18px;padding:14px;margin-bottom:12px}
+.hero{text-align:center;padding:18px 10px}
+.hero .v{font-size:84px;line-height:.9;font-weight:900;font-variant-numeric:tabular-nums}
+.hero .u{margin-top:8px;color:#aaa}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.metric{background:#101014;border-radius:14px;padding:12px}
+.label{font-size:11px;color:#9c9ca6}
+.num{font-size:26px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+button,select{border:0;border-radius:14px;padding:14px 12px;font-size:16px;font-weight:800;width:100%}
+select{background:#292930;color:#fff;margin-bottom:10px}
+.primary{background:#fff;color:#111}
+.secondary{background:#2b2b32;color:#fff}
+.danger{background:#511c1c;color:#ffd0d0}
+.accent{background:#173f2b;color:#b9ffd5}
+.status{font-size:13px;color:#bbb;line-height:1.45}
+.good{color:#8ce99a}.warn{color:#ffd43b}.bad{color:#ff8787}
+.tiny{font-size:11px;color:#777;line-height:1.45;margin-top:8px}
+.split{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #292930;gap:8px;font-variant-numeric:tabular-nums}
+.split:last-child{border-bottom:0}
+.strokeBox{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}
+.sens{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.sens button.active{outline:2px solid #fff}
+.tap{min-height:92px;font-size:22px}
+.countdown{font-size:64px;text-align:center;font-weight:900;display:none;padding:18px}
+.progress{height:10px;background:#24242b;border-radius:99px;overflow:hidden;margin-top:8px}
+.progress>div{height:100%;width:0%;background:#fff;transition:width .1s linear}
+.historyCard{background:#101014;border-radius:14px;padding:12px;margin-top:9px}
+.historyHead{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.historyTitle{font-weight:800;font-size:14px}
+.historyMeta{font-size:12px;color:#aaa;line-height:1.55;margin-top:5px}
+.historyActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.historyActions button{padding:9px 8px;font-size:13px;border-radius:10px}
+.smallDanger{background:#511c1c;color:#ffd0d0}
+.historyTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.historyActions{grid-template-columns:repeat(3,1fr)}
+.detailBox{display:none;margin-top:10px;border-top:1px solid #2a2a31;padding-top:10px}
+.detailBox.open{display:block}
+.detailGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.detailMetric{background:#17171d;border-radius:10px;padding:9px}
+.detailMetric .v{font-size:18px;font-weight:800;margin-top:3px}
+.chartWrap{background:#0c0c10;border-radius:12px;padding:8px;margin-top:8px}
+.chartTitle{font-size:12px;color:#aaa;margin-bottom:5px}
+.chart{width:100%;height:120px;display:block}
+.detailSplit{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #222}
+
+.tabNav{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;position:sticky;top:0;z-index:20;background:#0c0c0f;padding:8px 0}
+.tabBtn{padding:12px 8px;border-radius:12px;border:1px solid #333;background:#15151a;color:#bbb;font-weight:800}
+.tabBtn.active{background:#fff;color:#111;border-color:#fff}
+.appPage{display:none}.appPage.active{display:block}
+.memberCard{background:#101014;border-radius:14px;padding:12px;margin-top:9px}
+.memberName{font-size:16px;font-weight:800}
+.memberMeta{font-size:13px;color:#aaa;line-height:1.55;margin-top:5px}
+.memberActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.formField{margin-top:8px}
+.formField label{display:block;font-size:12px;color:#aaa;margin-bottom:5px}
+.formField input,.formField select,.formField textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:15px;box-sizing:border-box}
+.formField textarea{min-height:72px;resize:vertical}
+@media(max-width:520px){.formGrid{grid-template-columns:1fr}}
+
+@media(min-width:700px){.grid{grid-template-columns:repeat(3,1fr)}.hero .v{font-size:100px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.9 · 即時速度＋隊員資料庫＋分頁</div></div><div class="ver" id="clock"></div></div>
+<div class="tabNav">
+  <button class="tabBtn active" data-page="training">訓練</button>
+  <button class="tabBtn" data-page="history">訓練紀錄</button>
+  <button class="tabBtn" data-page="members">隊員資料庫</button>
+</div>
+<div class="appPage active" id="page-training">
+
+
+<div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜即時速度</div></div>
+<div class="panel countdown" id="countdown">3</div>
+
+<div class="panel">
+<div class="grid" style="margin-bottom:10px">
+<div class="metric">
+  <div class="label">訓練隊員</div>
+  <select id="memberSelect" style="width:100%;margin-top:6px"><option value="">未指定隊員</option></select>
+</div>
+<div class="metric">
+  <div class="label">即時速度反應</div>
+  <select id="speedResponse" style="width:100%;margin-top:6px">
+    <option value="fast" selected>快速（建議）</option>
+    <option value="balanced">平衡</option>
+    <option value="stable">穩定</option>
+  </select>
+</div>
+</div>
+<div class="grid" style="margin-bottom:10px">
+<div class="metric"><div class="label">隊伍／組合</div><input id="teamName" value="黃金沒力號" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
+<div class="metric"><div class="label">訓練標籤</div><input id="sessionName" placeholder="例如：比賽配置 A" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
+</div>
+<select id="mode">
+<option value="50">50m 測試</option>
+<option value="100">100m 測試</option>
+<option value="150">150m 測試</option>
+<option value="200">200m 測試</option>
+<option value="500" selected>500m 測試</option>
+<option value="800">800m 測試</option>
+<option value="1000">1000m 測試</option>
+<option value="2000">2000m 測試</option>
+<option value="0">自由訓練</option>
+</select>
+<div class="grid">
+<div class="metric"><div class="label">時間</div><div class="num" id="time">00:00.0</div></div>
+<div class="metric"><div class="label">距離</div><div class="num"><span id="distance">0</span> m</div></div>
+<div class="metric"><div class="label">平均速度</div><div class="num"><span id="avg">0.0</span></div><div class="label">km/h</div></div>
+<div class="metric"><div class="label">最高穩定速度</div><div class="num"><span id="max">0.0</span></div><div class="label">km/h</div></div>
+<div class="metric"><div class="label">500m 預估</div><div class="num" id="estimate">--:--.-</div></div>
+<div class="metric"><div class="label">GPS 精度</div><div class="num"><span id="accuracy">--</span> m</div></div>
+</div>
+</div>
+
+<div class="panel controls">
+<button class="primary" id="startBtn">開始訓練</button>
+<button class="secondary" id="resetBtn">重設／下一趟</button>
+</div>
+
+<div class="panel">
+<div class="strokeBox">
+<div>
+<div class="label">自動槳頻</div>
+<div class="num"><span id="spm">0</span> SPM</div>
+<div class="status" id="motionStatus">尚未啟用動作感測</div>
+<div class="progress"><div id="confidenceBar"></div></div>
+<div class="tiny">信心度：<span id="confidence">0</span>%｜主軸：<span id="axisLabel">未判定</span></div>
+<div style="margin-top:14px;padding:14px;border-radius:14px;background:#101116">
+  <div style="display:flex;justify-content:space-between;gap:12px">
+    <span>感測器訊號／靜止判斷</span><strong id="motionDiagText">等待資料</strong>
+  </div>
+  <div style="height:10px;background:#2b2c33;border-radius:99px;overflow:hidden;margin-top:10px">
+    <div id="motionDiagBar" style="height:100%;width:0%;background:#fff;transition:width .08s linear"></div>
+  </div>
+  <div style="margin-top:9px;color:#9b9ba3;font-size:14px">
+    Motion事件：<span id="motionEvents">0</span> ｜ 訊號：<span id="motionSignal">0.00</span>
+  </div>
+</div>
+
+<div style="margin-top:10px"><button class="accent" id="motionBtn">允許動作感測</button></div>
+<details style="margin-top:8px">
+<summary class="status" style="cursor:pointer">槳頻設定／重新校正</summary>
+<div style="margin-top:8px"><button class="secondary" id="calibrateBtn">進階校正 10 槳</button></div>
+<div class="sens">
+<button class="secondary" data-sens="low">低</button>
+<button class="secondary active" data-sens="mid">中</button>
+<button class="secondary" data-sens="high">高</button>
+</div>
+</details>
+</div>
+<div>
+<div class="label">總槳數</div><div class="num" id="strokeCount">0</div>
+<div class="label" style="margin-top:12px">平均槳頻</div><div class="num"><span id="avgSpm">0</span></div>
+<div class="label" style="margin-top:12px">狀態</div><div class="num" style="font-size:20px" id="strokeState">待機</div>
+</div>
+</div>
+<div class="tiny">請固定手機。V7.0 一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。</div>
+</div>
+
+<div class="panel">
+<div class="label" style="margin-bottom:8px">20 槳測試</div>
+<div class="grid">
+<div class="metric"><div class="label">目前槳數</div><div class="num"><span id="testStrokeCount">0</span>/20</div></div>
+<div class="metric"><div class="label">20 槳時間</div><div class="num" id="testTime">00:00.0</div></div>
+<div class="metric"><div class="label">平均 SPM</div><div class="num" id="testSpm">0</div></div>
+<div class="metric"><div class="label">起始速度</div><div class="num"><span id="testStartSpeed">0.0</span></div></div>
+<div class="metric"><div class="label">結束速度</div><div class="num"><span id="testEndSpeed">0.0</span></div></div>
+<div class="metric"><div class="label">速度增加</div><div class="num"><span id="testDeltaSpeed">0.0</span></div></div><div class="metric"><div class="label">20 槳距離</div><div class="num"><span id="testDistance">0.0</span> m</div></div>
+</div>
+<div class="tiny" id="testAutoStatus" style="margin-top:10px">按「開始訓練」後，前 20 槳會自動分析。</div>
+</div>
+
+<div class="panel"><div class="label">每 100m 分段</div><div id="splits"><div class="status">尚無分段紀錄</div></div></div>
+<div class="panel">
+<div class="label">GPS / 感測狀態</div>
+<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><div class="tiny" id="trackStatus">GPX 軌跡點：0</div><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
+<div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。</div>
+<div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
+</div>
+
+</div>
+<div class="appPage" id="page-history">
+<div class="panel">
+<div class="label">團隊訓練紀錄（本機）</div>
+<div id="teamHistory"><div class="status">尚無訓練紀錄</div></div>
+<div class="historyTools">
+<button class="secondary" id="showAllHistoryBtn">顯示全部紀錄</button>
+<button class="smallDanger" id="clearHistoryBtn">刪除全部紀錄</button>
+</div>
+<div class="tiny">每筆紀錄可查看詳細分析、編輯或刪除。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。</div>
+</div>
+<div class="panel">
+<div class="label">資料備份／匯出</div>
+<div class="historyTools" style="margin-top:10px">
+<button class="secondary" id="exportCsvBtn">匯出全部 CSV</button>
+<button class="secondary" id="exportJsonBtn">完整備份 JSON</button>
+<button class="secondary" id="importJsonBtn">匯入備份 JSON</button>
+<button class="secondary" id="exportLatestGpxBtn">匯出最新一趟 GPX</button>
+<input id="importJsonFile" type="file" accept=".json,application/json" style="display:none">
+</div>
+<div class="tiny">更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。</div>
+</div>
+
+</div>
+<div class="appPage" id="page-members">
+<div class="panel">
+  <div class="label">新增／編輯隊員</div>
+  <input type="hidden" id="memberEditId">
+  <div class="formGrid">
+    <div class="formField"><label>姓名 *</label><input id="memberName" placeholder="例如：陳建名"></div>
+    <div class="formField"><label>暱稱</label><input id="memberNickname" placeholder="選填"></div>
+    <div class="formField"><label>側別</label><select id="memberSide"><option value="">未指定</option><option value="左">左槳</option><option value="右">右槳</option></select></div>
+    <div class="formField"><label>位置</label><input id="memberPosition" placeholder="例如：頭槳、2號位"></div>
+    <div class="formField"><label>身高（cm）</label><input id="memberHeight" type="number" inputmode="decimal" placeholder="175"></div>
+    <div class="formField"><label>槳長（cm）</label><input id="memberPaddleLength" type="number" inputmode="decimal" placeholder="例如：130"></div>
+  </div>
+  <div class="formField"><label>備註</label><textarea id="memberNote" placeholder="比賽配置、技術重點、受測備註等"></textarea></div>
+  <div class="historyTools">
+    <button class="primary" id="saveMemberBtn">儲存隊員</button>
+    <button class="secondary" id="cancelMemberEditBtn">清除表單</button>
+  </div>
+</div>
+<div class="panel">
+  <div class="label">隊員名單</div>
+  <div id="memberList"><div class="status">尚無隊員資料</div></div>
+  <div class="tiny">隊員資料儲存在本機，也會一起包含在 V7.9 的 JSON 完整備份中。</div>
+</div>
+</div>
+
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],runTrack=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null;
+let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
+let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
+const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
+function fmtTime(ms){if(!isFinite(ms)||ms<0)return"--:--.-";const t=ms/1000,m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
+function nowElapsed(){return running?elapsedBefore+(performance.now()-startedAt):elapsedBefore}
+function updateClock(){$("clock").textContent=new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}setInterval(updateClock,1000);updateClock();
+function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
+function mad(a){if(a.length<3)return 0;const m=median(a);return median(a.map(v=>Math.abs(v-m)))}
+let speedResponseMode=localStorage.getItem("dragonboatSpeedResponse")||"fast";
+function smoothSpeed(){
+  if(!speedSamples.length)return 0;
+  const latest=speedSamples[speedSamples.length-1]||0;
+  if(speedResponseMode==="stable")return median(speedSamples.slice(-7));
+  if(speedResponseMode==="balanced"){
+    const med=median(speedSamples.slice(-5));
+    return latest*0.45+med*0.55;
+  }
+  const med=median(speedSamples.slice(-3));
+  return latest*0.68+med*0.32;
+}
+function haversine(a,b){const R=6371000,l1=a.latitude*Math.PI/180,l2=b.latitude*Math.PI/180,dl=(b.latitude-a.latitude)*Math.PI/180,dn=(b.longitude-a.longitude)*Math.PI/180,x=Math.sin(dl/2)**2+Math.cos(l1)*Math.cos(l2)*Math.sin(dn/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+function updateMain(){const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
+if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSecond=sec;runSeries.push({t:e,d:totalDistance,speed:sp,spm:currentSpm});if(runSeries.length>3600)runSeries.shift()}}}
+function startTimerLoop(){clearInterval(timerHandle);timerHandle=setInterval(updateMain,100)} function stopTimerLoop(){clearInterval(timerHandle);timerHandle=null;updateMain()}
+function gpsStatus(t,c="warn"){
+  const el=$("gpsStatus");
+  if(el){el.textContent=t;el.className="status "+c}
+}
+function gpsErrorText(e){
+  if(!e)return "GPS 未知錯誤";
+  if(e.code===1)return "定位權限被拒絕";
+  if(e.code===2)return "目前無法取得位置";
+  if(e.code===3)return "GPS 定位逾時";
+  return "GPS 錯誤："+(e.message||"未知");
+}
+function onPosition(pos){
+  const c=pos.coords,acc=isFinite(c.accuracy)?c.accuracy:999;
+  gpsReady=true;gpsLastFixAt=Date.now();
+  $("accuracy").textContent=Math.round(acc);
+  gpsStatus(acc<=8?"GPS 狀態良好":acc<=20?"GPS 已定位":"GPS 已定位，但精度較差",acc<=8?"good":acc<=20?"warn":"bad");
+
+  let gpsSpeed=(typeof c.speed==="number"&&isFinite(c.speed)&&c.speed>=0)?c.speed*3.6:0;
+  const cur={latitude:c.latitude,longitude:c.longitude,timestamp:pos.timestamp,accuracy:c.accuracy};
+
+  if(lastPos){
+    const dt=(cur.timestamp-lastPos.timestamp)/1000,dist=haversine(lastPos,cur);
+    if(dt>0&&dt<10&&dist>=0&&dist<80){
+      const cs=dist/dt*3.6;
+      if((!gpsSpeed||gpsSpeed<0.5)&&cs<35)gpsSpeed=cs;
+      if(running&&acc<=30&&dist<40){
+        totalDistance+=dist;checkSplits();checkTarget();
+      }
+    }
+  }
+  lastPos=cur;
+
+  if(running){
+    runTrack.push({
+      lat:c.latitude,
+      lon:c.longitude,
+      time:new Date(pos.timestamp||Date.now()).toISOString(),
+      accuracy:acc,
+      speedKmh:(isFinite(gpsSpeed)&&gpsSpeed>=0)?gpsSpeed:null,
+      distanceM:totalDistance,
+      spm:currentSpm||0,
+      strokes:totalStrokeCount||0
+    });
+    if(runTrack.length>20000)runTrack.shift();
+    const ts=$("trackStatus");
+    if(ts)ts.textContent="GPX 軌跡點："+runTrack.length+" ✓";
+  }
+
+  if(isFinite(gpsSpeed)&&gpsSpeed>=0&&gpsSpeed<=40){
+    speedSamples.push(gpsSpeed);
+    if(speedSamples.length>20)speedSamples.shift();
+    const sm=smoothSpeed();
+    if(sm>maxSpeed)maxSpeed=sm;
+  }
+  updateMain();
+}
+function startGpsWatch(){
+  if(!("geolocation" in navigator)){
+    gpsStatus("此瀏覽器不支援定位","bad");return;
+  }
+  if(watchId!==null){
+    try{navigator.geolocation.clearWatch(watchId)}catch(e){}
+    watchId=null;
+  }
+  watchId=navigator.geolocation.watchPosition(
+    onPosition,
+    e=>{gpsReady=false;gpsStatus(gpsErrorText(e),"bad")},
+    {enableHighAccuracy:true,maximumAge:1000,timeout:20000}
+  );
+}
+function requestGps(){
+  startGpsWatch();
+}
+async function ensureGpsReady(){
+  if(!window.isSecureContext){
+    gpsStatus("必須使用 HTTPS 才能定位","bad");
+    throw new Error("not-secure");
+  }
+  if(!("geolocation" in navigator)){
+    gpsStatus("此瀏覽器不支援定位","bad");
+    throw new Error("unsupported");
+  }
+
+  // For continuous training, always refresh the fix before a new run.
+  if(watchId===null) startGpsWatch();
+
+  gpsStatus("GPS 定位中…","warn");
+  $("accuracy").textContent="--";
+
+  return new Promise((resolve,reject)=>{
+    let done=false;
+    const finish=(ok,val)=>{
+      if(done)return; done=true;
+      gpsPending=null;
+      ok?resolve(val):reject(val);
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        onPosition(pos);
+        startGpsWatch();
+        finish(true,true);
+      },
+      err=>{
+        gpsReady=false;
+        gpsStatus(gpsErrorText(err),"bad");
+        finish(false,err);
+      },
+      {enableHighAccuracy:true,maximumAge:0,timeout:20000}
+    );
+  });
+}
+
+let appInitialized=false;
+function rearmGpsAfterReset(){
+  gpsReady=false;
+  gpsLastFixAt=0;
+  lastPos=null;
+  speedSamples=[];
+  if(watchId!==null){
+    try{navigator.geolocation.clearWatch(watchId)}catch(e){}
+    watchId=null;
+  }
+  gpsStatus("GPS 重新定位中…","warn");
+  $("accuracy").textContent="--";
+  if(appInitialized) startGpsWatch();
+}
+async function gpsDiagnostic(){
+  if(!window.isSecureContext){
+    alert("目前不是 HTTPS 安全連線，Safari 不會提供 GPS。");
+    return;
+  }
+  gpsStatus("GPS 測試中…","warn");
+  try{
+    if(navigator.permissions&&navigator.permissions.query){
+      try{
+        const p=await navigator.permissions.query({name:"geolocation"});
+        gpsStatus("GPS 權限："+p.state+"，正在定位…","warn");
+      }catch(e){}
+    }
+    await ensureGpsReady();
+    alert("GPS 已取得。精度約 ±"+$("accuracy").textContent+" m。");
+  }catch(e){
+    alert("GPS 仍無法取得。畫面狀態："+$("gpsStatus").textContent+"。\\n\\n請到 iPhone「設定 → 隱私權與安全性 → 定位服務 → Safari 網站」，允許定位並開啟「精確位置」。");
+  }
+}
+function checkSplits(){while(totalDistance>=nextSplit){splits.push({distance:nextSplit,time:nowElapsed()});nextSplit+=100;renderSplits()}}
+function renderSplits(){const box=$("splits");if(!splits.length){box.innerHTML='<div class="status">尚無分段紀錄</div>';return}box.innerHTML="";let p=0;splits.forEach(i=>{const r=document.createElement("div");r.className="split";r.innerHTML="<span>"+i.distance+" m</span><span>"+fmtTime(i.time-p)+"</span>";p=i.time;box.appendChild(r)})}
+function checkTarget(){const t=Number($("mode").value);if(running&&t>0&&totalDistance>=t)stopRun()}
+async function requestWakeLock(){try{if("wakeLock"in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}
+function releaseWakeLock(){try{if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}}
+async function countdownStart(){if(running)return;const b=$("countdown");b.style.display="block";for(let i=3;i>=1;i--){b.textContent=i;await new Promise(r=>setTimeout(r,1000))}b.textContent="GO!";await new Promise(r=>setTimeout(r,450));b.style.display="none";startRun()}
+
+function resetStrokeDetectorForNewRun(){
+  // 保留已取得的動作感測權限與事件監聽，只清除上一趟留下的判斷狀態。
+  lastStrokeTime=0;
+  lastPeakTime=0;
+  strokeTimes=[];
+  currentSpm=0;
+  averageSpm=0;
+  confidence=0;
+  filtered=0;
+  prevFiltered=0;
+  prevAxisVal=0;
+  noiseWindow=[];
+  peakWindow=[];
+  calibrating=false;
+  calibrationCount=0;
+  calibrationSamples=[];
+  $("spm").textContent="0";
+  $("avgSpm").textContent="0";
+  $("confidence").textContent="0";
+  $("confidenceBar").style.width="0%";
+  $("strokeState").textContent=motionEnabled?"待偵測":"待機";
+  if(motionEnabled){
+    $("motionStatus").textContent="AUTO 已就緒";
+    $("motionStatus").className="status good";
+    $("sensorStatus").textContent="動作感測：AUTO";
+    $("sensorStatus").className="status good";
+  }
+}
+function startRun(){
+resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent="GPX 軌跡點：0";lastSeriesSecond=-1;
+running=true;startedAt=performance.now();lastPos=null;
+$("startBtn").textContent="停止訓練";$("startBtn").className="danger";
+startTimerLoop();requestWakeLock();
+start20();
+if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：等待第一槳…";
+}
+function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
+function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="按「開始訓練」後，前 20 槳會自動分析。";renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
+function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
+function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(testStrokeCount>=20){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析完成"}}
+function start20(){testActive=true;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent="前 20 槳：分析中…"}
+async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",enhancedStrokeMotion);motionEnabled=true;if($("motionBtn"))$("motionBtn").textContent="動作感測已允許";if($("motionDiagText"))$("motionDiagText").textContent="等待 Motion 資料";motionMsg("AUTO 已啟用；靜止時不計槳","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
+function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
+function beginCalibration(){if(!motionEnabled){motionMsg("請先啟用自動槳頻","warn");return}calibrating=true;calibrationCount=0;calibrationSamples=[];axisScore={x:0,y:0,z:0};confidence=0;strokeTimes=[];lastStrokeTime=0;motionMsg("校正中 0/10","warn");$("strokeState").textContent="學習中"}
+function finishCalibration(){calibrating=false;const best=Object.entries(axisScore).sort((a,b)=>b[1]-a[1])[0];axis=best?best[0]:"x";$("axisLabel").textContent=axis.toUpperCase();motionMsg("校正完成，AUTO 偵測中","good");$("strokeState").textContent="待穩定"}
+
+let motionEventCount=0,motionLastAt=0,motionDiagPeak=0,motionStillSamples=[],motionActive=false,motionActiveSince=0;
+let v69LastStrokeAt=0,v69Intervals=[],v69Noise=0.10,v69PrevSignal=0,v69PrevSlope=0,v69Peak=0;
+let v69SignalHistory=[],v69Confidence=0;
+
+function resetV69StrokeDetector(){
+  v69LastStrokeAt=0;v69Intervals=[];v69Noise=0.10;v69PrevSignal=0;v69PrevSlope=0;v69Peak=0;
+  motionStillSamples=[];motionActive=false;motionActiveSince=0;
+  v69SignalHistory=[];v69Confidence=0;
+  currentSpm=0;lastStrokeTime=0;
+}
+
+function medianV69(a){
+  if(!a.length)return 0;
+  const b=[...a].sort((x,y)=>x-y),m=Math.floor(b.length/2);
+  return b.length%2?b[m]:(b[m-1]+b[m])/2;
+}
+
+function enhancedStrokeMotion(e){
+  if(!motionEnabled)return;
+  const a=e.acceleration||e.accelerationIncludingGravity;
+  if(!a)return;
+
+  motionEventCount++;
+  motionLastAt=performance.now();
+  const x=Number(a.x)||0,y=Number(a.y)||0,z=Number(a.z)||0;
+  const rawMag=Math.sqrt(x*x+y*y+z*z);
+
+  motionStillSamples.push(rawMag);
+  if(motionStillSamples.length>20)motionStillSamples.shift();
+  const meanRaw=motionStillSamples.reduce((s,v)=>s+v,0)/motionStillSamples.length;
+  const variance=motionStillSamples.reduce((s,v)=>s+(v-meanRaw)*(v-meanRaw),0)/motionStillSamples.length;
+  const motionStd=Math.sqrt(variance);
+
+  // Require a genuinely moving phone before stroke detection is armed.
+  // Small sensor noise while the phone is still should never count as a stroke.
+  const activeNow = motionStd >= 0.12 || Math.abs(rawMag-meanRaw) >= 0.28;
+  if(activeNow){
+    if(!motionActiveSince)motionActiveSince=performance.now();
+    if(performance.now()-motionActiveSince>=180)motionActive=true;
+  }else{
+    motionActiveSince=0;
+    if(motionStd<0.07)motionActive=false;
+  }
+
+  if($("motionEvents"))$("motionEvents").textContent=motionEventCount;
+  if($("motionSignal"))$("motionSignal").textContent=rawMag.toFixed(2);
+  if($("motionDiagBar")){
+    const pct=Math.max(2,Math.min(100,rawMag*8));
+    $("motionDiagBar").style.width=pct+"%";
+  }
+  if($("motionDiagText"))$("motionDiagText").textContent=motionActive?"偵測到動作":"靜止／雜訊已忽略";
+  if(!running)return;
+  if(!motionActive){
+    currentSpm=0;
+    if($("spm"))$("spm").textContent="0";
+    if($("strokeState"))$("strokeState").textContent="等待動作";
+    v69Peak=0;v69PrevSlope=0;v69PrevSignal=0;
+    return;
+  }
+  // Magnitude is orientation-independent. Remove slow baseline with a short rolling mean.
+  const mag=rawMag;
+  v69SignalHistory.push(mag);
+  if(v69SignalHistory.length>12)v69SignalHistory.shift();
+  const baseline=v69SignalHistory.reduce((s,v)=>s+v,0)/v69SignalHistory.length;
+  const sig=Math.abs(mag-baseline);
+
+  v69Noise=0.96*v69Noise+0.04*sig;
+  const threshold=Math.max(0.32,Math.min(2.2,v69Noise*2.8));
+  const slope=sig-v69PrevSignal;
+  if(slope>0)v69Peak=Math.max(v69Peak,sig);
+
+  const now=performance.now();
+  const typical=v69Intervals.length?medianV69(v69Intervals.slice(-7)):750;
+  // Anti-double-trigger: one paddle cycle should not create two strokes.
+  // 480 ms corresponds to a hard ceiling of about 125 SPM.
+  const minGap=Math.max(480,typical*0.68);
+  const maxGap=Math.min(1600,typical*1.60);
+
+  // Detect a local peak. Once rhythm is learned, allow a slightly lower threshold in the expected time window.
+  const since=now-v69LastStrokeAt;
+  const expected=v69LastStrokeAt>0 && since>=minGap && since<=maxGap;
+  const effectiveThreshold=expected?threshold*0.90:threshold;
+  const peakEnded=(v69PrevSlope>0 && slope<=0);
+
+  if(peakEnded && motionActive && v69Peak>=Math.max(effectiveThreshold,0.34) && (v69LastStrokeAt===0 || since>=minGap)){
+    if(v69LastStrokeAt>0){
+      const dt=since;
+      if(dt>=480 && dt<=1600){
+        v69Intervals.push(dt);
+        if(v69Intervals.length>10)v69Intervals.shift();
+        const med=medianV69(v69Intervals);
+        if(v69Intervals.length>=2){
+          currentSpm=Math.round(60000/med);
+          currentSpm=Math.max(35,Math.min(125,currentSpm));
+        }else{
+          currentSpm=0;
+        }
+        const deviations=v69Intervals.map(v=>Math.abs(v-med)/med);
+        const dev=deviations.length?deviations.reduce((s,v)=>s+v,0)/deviations.length:0;
+        v69Confidence=Math.round(Math.max(0,Math.min(99,100-dev*180)));
+      }
+    }
+    v69LastStrokeAt=now;
+    registerStroke(now);
+    $("spm").textContent=currentSpm||"--";
+    if($("strokeState"))$("strokeState").textContent=v69Confidence>=80?"穩定":v69Confidence>=60?"可用":"學習節奏";
+    if($("confidence"))$("confidence").textContent=v69Confidence+"%";
+    v69Peak=0;
+  } else if(peakEnded){
+    v69Peak=0;
+  }
+
+  v69PrevSlope=slope;
+  v69PrevSignal=sig;
+}
+
+function onMotion(e){if(!motionEnabled)return;const a=e.acceleration||e.accelerationIncludingGravity;if(!a)return;const vals={x:Number(a.x)||0,y:Number(a.y)||0,z:Number(a.z)||0};if(calibrating){axisScore.x+=Math.abs(vals.x);axisScore.y+=Math.abs(vals.y);axisScore.z+=Math.abs(vals.z)}
+const raw=vals[axis];filtered=0.82*filtered+0.18*raw;const hp=filtered-prevFiltered;prevFiltered=filtered;noiseWindow.push(Math.abs(hp));if(noiseWindow.length>80)noiseWindow.shift();const noise=Math.max(0.03,median(noiseWindow)+mad(noiseWindow));const cfg=sensCfg[sensitivity],th=noise*cfg.mult;const t=performance.now();
+peakWindow.push({v:Math.abs(hp),t});if(peakWindow.length>5)peakWindow.shift();
+if(Math.abs(hp)>th){const prevIntervals=[];for(let i=1;i<strokeTimes.length;i++)prevIntervals.push(strokeTimes[i]-strokeTimes[i-1]);const medI=median(prevIntervals.slice(-6));let rhythmOK=true;if(medI&&lastStrokeTime){const dt=t-lastStrokeTime;rhythmOK=dt>medI*0.58&&dt<medI*1.55}if(rhythmOK&&(!lastPeakTime||t-lastPeakTime>cfg.minGap)){lastPeakTime=t;registerStroke(t)}}}
+
+
+const MEMBER_KEY="dragonboatMembersV1";
+function getMembers(){
+  try{return JSON.parse(localStorage.getItem(MEMBER_KEY)||"[]")}catch(e){return[]}
+}
+function setMembers(arr){
+  localStorage.setItem(MEMBER_KEY,JSON.stringify(arr));
+}
+function renderMemberSelect(){
+  const sel=$("memberSelect");
+  if(!sel)return;
+  const current=sel.value;
+  const members=getMembers();
+  sel.innerHTML='<option value="">未指定隊員</option>'+members.map(m=>
+    '<option value="'+escapeHtml(m.id)+'">'+escapeHtml(m.name)+(m.nickname?'（'+escapeHtml(m.nickname)+'）':'')+'</option>'
+  ).join("");
+  if(members.some(m=>m.id===current))sel.value=current;
+}
+function clearMemberForm(){
+  $("memberEditId").value="";
+  $("memberName").value="";
+  $("memberNickname").value="";
+  $("memberSide").value="";
+  $("memberPosition").value="";
+  $("memberHeight").value="";
+  $("memberPaddleLength").value="";
+  $("memberNote").value="";
+  $("saveMemberBtn").textContent="儲存隊員";
+}
+function saveMember(){
+  const name=$("memberName").value.trim();
+  if(!name){alert("請輸入隊員姓名。");return}
+  const arr=getMembers(),id=$("memberEditId").value||("m-"+Date.now()+"-"+Math.random().toString(36).slice(2,7));
+  const rec={
+    id,name,
+    nickname:$("memberNickname").value.trim(),
+    side:$("memberSide").value,
+    position:$("memberPosition").value.trim(),
+    height:Number($("memberHeight").value)||null,
+    paddleLength:Number($("memberPaddleLength").value)||null,
+    note:$("memberNote").value.trim(),
+    updatedAt:new Date().toISOString()
+  };
+  const i=arr.findIndex(x=>x.id===id);
+  if(i>=0)arr[i]=rec;else arr.push(rec);
+  setMembers(arr);clearMemberForm();renderMembers();renderMemberSelect();
+}
+function editMember(id){
+  const m=getMembers().find(x=>x.id===id);if(!m)return;
+  $("memberEditId").value=m.id;
+  $("memberName").value=m.name||"";
+  $("memberNickname").value=m.nickname||"";
+  $("memberSide").value=m.side||"";
+  $("memberPosition").value=m.position||"";
+  $("memberHeight").value=m.height||"";
+  $("memberPaddleLength").value=m.paddleLength||"";
+  $("memberNote").value=m.note||"";
+  $("saveMemberBtn").textContent="更新隊員";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function deleteMember(id){
+  const arr=getMembers(),m=arr.find(x=>x.id===id);if(!m)return;
+  if(!confirm("確定刪除隊員「"+m.name+"」嗎？既有訓練紀錄中的姓名快照不會被刪除。"))return;
+  setMembers(arr.filter(x=>x.id!==id));renderMembers();renderMemberSelect();
+}
+function renderMembers(){
+  const box=$("memberList"),arr=getMembers();
+  if(!box)return;
+  if(!arr.length){box.innerHTML='<div class="status">尚無隊員資料</div>';return}
+  box.innerHTML=arr.map(m=>
+    '<div class="memberCard"><div class="memberName">'+escapeHtml(m.name)+(m.nickname?'｜'+escapeHtml(m.nickname):'')+'</div>'+
+    '<div class="memberMeta">'+
+    (m.side?'側別：'+escapeHtml(m.side)+'槳<br>':'')+
+    (m.position?'位置：'+escapeHtml(m.position)+'<br>':'')+
+    (m.height?'身高：'+m.height+' cm<br>':'')+
+    (m.paddleLength?'槳長：'+m.paddleLength+' cm<br>':'')+
+    (m.note?'備註：'+escapeHtml(m.note):'')+
+    '</div><div class="memberActions">'+
+    '<button class="secondary" onclick="editMember('+JSON.stringify(m.id)+')">編輯</button>'+
+    '<button class="smallDanger" onclick="deleteMember('+JSON.stringify(m.id)+')">刪除</button>'+
+    '</div></div>'
+  ).join("");
+}
+function selectedMemberSnapshot(){
+  const id=$("memberSelect")?$("memberSelect").value:"";
+  const m=getMembers().find(x=>x.id===id);
+  return m?{id:m.id,name:m.name,nickname:m.nickname||"",side:m.side||"",position:m.position||"",height:m.height||null,paddleLength:m.paddleLength||null}:null;
+}
+function showPage(name){
+  document.querySelectorAll(".appPage").forEach(p=>p.classList.toggle("active",p.id==="page-"+name));
+  document.querySelectorAll(".tabBtn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  if(name==="history")renderHistory();
+  if(name==="members")renderMembers();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function getHistory(){
+ try{return JSON.parse(localStorage.getItem("dragonboatTeamHistory")||"[]")}catch(e){return[]}
+}
+function setHistory(arr){
+ localStorage.setItem("dragonboatTeamHistory",JSON.stringify(arr.slice(0,100)));
+}
+function saveTeamRecord(){
+ if(elapsedBefore<1000||totalDistance<1)return;
+ const rec={
+  id:Date.now()+"-"+Math.random().toString(36).slice(2,8),
+  at:new Date().toISOString(),
+  team:$("teamName").value.trim()||"未命名隊伍",
+  session:$("sessionName").value.trim()||"一般訓練",
+  member:selectedMemberSnapshot(),
+  mode:Number($("mode").value),
+  time:elapsedBefore,
+  distance:totalDistance,
+  avgSpeed:(totalDistance/(elapsedBefore/1000))*3.6,
+  maxSpeed:maxSpeed,
+  avgSpm:averageSpm,
+  strokes:totalStrokeCount,
+  twentyDistance:testStrokeCount>=20?Math.max(0,testEndDistance-testStartDistance):null,
+  twentyTime:testStrokeCount>=20&&testEndTime>testStartTime?(testEndTime-testStartTime):null,
+  twentySpm:testStrokeCount>=20?Number($("testSpm").textContent||0):null,
+  twentyStartSpeed:testStrokeCount>=20?testStartSpeed:null,
+  twentyEndSpeed:testStrokeCount>=20?testEndSpeed:null,
+  splits:splits.map(x=>({distance:x.distance,time:x.time})),
+  series:runSeries.slice(),
+  track:runTrack.slice()
+ };
+ const arr=getHistory();
+ arr.unshift(rec);
+ setHistory(arr);
+ renderHistory();
+}
+let showAllHistory=false;
+
+function csvEscape(v){
+  if(v===null||v===undefined)return "";
+  const s=String(v);
+  return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function downloadTextFile(filename,text,type){
+  const blob=new Blob(["\ufeff"+text],{type:type||"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function historyRecords(){
+  try{
+    const rows=getHistory();
+    return Array.isArray(rows)?rows:[];
+  }catch(e){return []}
+}
+function recordToCsvRow(r){
+  const splits=Array.isArray(r.splits)?r.splits:[];
+  const splitText=splits.map(s=>{
+    if(typeof s==="string")return s;
+    const d=s.distance??s.m??s.mark??"";
+    const t=s.time??s.elapsed??s.value??"";
+    return d+"m:"+t;
+  }).join(" | ");
+  return [
+    r.date||r.datetime||r.createdAt||"",
+    r.team||"",
+    r.session||r.name||"",
+    (r.member&&r.member.name)||"",
+    r.mode||r.target||"",
+    r.distance??"",
+    r.duration??r.time??"",
+    r.avgSpeed??"",
+    r.maxSpeed??"",
+    r.avgSpm??r.spm??"",
+    r.totalStrokes??r.strokes??"",
+    r.twentyTime??"",
+    r.twentySpm??"",
+    r.twentyDistance??r.twentyDist??"",
+    r.strokeDistance??"",
+    splitText
+  ];
+}
+function exportAllCsv(){
+  const rows=historyRecords();
+  if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
+  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
+  const csv=[header,...rows.map(recordToCsvRow)].map(row=>row.map(csvEscape).join(",")).join("\n");
+  const d=new Date().toISOString().slice(0,10);
+  downloadTextFile("dragonboat-training-"+d+".csv",csv,"text/csv;charset=utf-8");
+}
+function exportAllJson(){
+  const rows=historyRecords();
+  if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
+  const payload={
+    app:"Dragon Boat Speedometer",
+    version:"7.9",
+    exportedAt:new Date().toISOString(),
+    records:rows,
+    members:getMembers()
+  };
+  const d=new Date().toISOString().slice(0,10);
+  downloadTextFile("dragonboat-training-backup-"+d+".json",JSON.stringify(payload,null,2),"application/json;charset=utf-8");
+}
+function exportOneCsv(index){
+  const rows=historyRecords();
+  const r=rows[index];
+  if(!r){alert("找不到這筆訓練紀錄。");return}
+  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"];
+  const csv=[header,recordToCsvRow(r)].map(row=>row.map(csvEscape).join(",")).join("\n");
+  downloadTextFile("dragonboat-session-"+(index+1)+".csv",csv,"text/csv;charset=utf-8");
+}
+
+
+function normalizeBackupRecords(data){
+  if(Array.isArray(data))return data;
+  if(data&&Array.isArray(data.records))return data.records;
+  if(data&&Array.isArray(data.history))return data.history;
+  return null;
+}
+function recordFingerprint(r){
+  return [
+    r.date||r.datetime||r.createdAt||r.startTime||"",
+    r.session||r.name||"",
+    r.mode||r.target||"",
+    Math.round(Number(r.distance||0)*10)/10,
+    Math.round(Number(r.duration||r.time||0)*10)/10
+  ].join("|");
+}
+function chooseBackupFile(){
+  const f=$("importJsonFile");f.value="";f.click();
+}
+function handleBackupFile(e){
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(String(reader.result||""));
+      const incoming=normalizeBackupRecords(data);
+      const incomingMembers=(data&&Array.isArray(data.members))?data.members:[];
+      if(!incoming)throw new Error("無法辨識備份格式");
+      if(!confirm(`找到 ${incoming.length} 筆紀錄。將與目前資料合併並略過重複紀錄，是否繼續？`))return;
+      const existing=historyRecords(), seen=new Set(existing.map(recordFingerprint));
+      let added=0,dup=0;
+      incoming.forEach(r=>{
+        if(!r||typeof r!=="object"||Array.isArray(r))return;
+        const fp=recordFingerprint(r);
+        if(seen.has(fp)){dup++;return}
+        existing.push(r);seen.add(fp);added++;
+      });
+      existing.sort((a,b)=>(Date.parse(b.date||b.datetime||b.createdAt||b.startTime||"")||0)-(Date.parse(a.date||a.datetime||a.createdAt||a.startTime||"")||0));
+      const kept=existing.slice(0,100);
+      setHistory(kept);
+      if(incomingMembers.length){
+        const existingMembers=getMembers(),memberIds=new Set(existingMembers.map(m=>m.id)),memberNames=new Set(existingMembers.map(m=>m.name));
+        incomingMembers.forEach(m=>{
+          if(!m||!m.name)return;
+          if((m.id&&memberIds.has(m.id))||memberNames.has(m.name))return;
+          existingMembers.push(m);
+          if(m.id)memberIds.add(m.id);memberNames.add(m.name);
+        });
+        setMembers(existingMembers);
+        renderMembers();renderMemberSelect();
+      }
+      renderHistory();
+      alert(`匯入完成：新增 ${added} 筆，略過 ${dup} 筆重複紀錄。`);
+    }catch(err){alert("匯入失敗："+(err.message||"JSON 格式錯誤"))}
+  };
+  reader.readAsText(file);
+}
+function xmlEscape(v){
+  return String(v??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&apos;");
+}
+function buildGpx(r){
+  const track=Array.isArray(r.track)?r.track:[];
+  if(!track.length)return "";
+  const name=xmlEscape((r.team||"Dragon Boat")+" - "+(r.session||r.name||"Training"));
+  const trkpts=track.map(p=>{
+    const lat=Number(p.lat),lon=Number(p.lon);
+    if(!isFinite(lat)||!isFinite(lon))return "";
+    const t=p.time?`<time>${xmlEscape(p.time)}</time>`:"";
+    const acc=isFinite(Number(p.accuracy))?`<db:accuracy>${Number(p.accuracy).toFixed(1)}</db:accuracy>`:"";
+    const spd=isFinite(Number(p.speedKmh))?`<db:speed_kmh>${Number(p.speedKmh).toFixed(2)}</db:speed_kmh>`:"";
+    const dist=isFinite(Number(p.distanceM))?`<db:distance_m>${Number(p.distanceM).toFixed(1)}</db:distance_m>`:"";
+    const spm=isFinite(Number(p.spm))?`<db:spm>${Math.round(Number(p.spm))}</db:spm>`:"";
+    const strokes=isFinite(Number(p.strokes))?`<db:strokes>${Math.round(Number(p.strokes))}</db:strokes>`:"";
+    const ext=(acc||spd||dist||spm||strokes)?`<extensions>${acc}${spd}${dist}${spm}${strokes}</extensions>`:"";
+    return `<trkpt lat="${lat.toFixed(7)}" lon="${lon.toFixed(7)}">${t}${ext}</trkpt>`;
+  }).join("");
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1"
+ creator="Dragon Boat Speedometer V7.9"
+ xmlns="http://www.topografix.com/GPX/1/1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:db="https://example.com/dragonboat"
+ xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata><name>${name}</name></metadata>
+  <trk><name>${name}</name><trkseg>${trkpts}</trkseg></trk>
+</gpx>`;
+}
+function safeFilenamePart(s){
+  return String(s||"training").replace(/[\\/:*?"<>|]+/g,"-").trim().slice(0,60)||"training";
+}
+
+function exportRenderedRecordGpx(btn){
+  try{
+    const rows=getHistory();
+    const raw=btn&&btn.dataset?Number(btn.dataset.gpxIndex):NaN;
+    if(!Number.isInteger(raw)||raw<0||raw>=rows.length){
+      alert("找不到這筆訓練紀錄。");
+      return;
+    }
+    const r=rows[raw];
+    return exportGpxFromRecord(r);
+  }catch(err){
+    alert("GPX 匯出失敗："+(err&&err.message?err.message:"未知錯誤"));
+  }
+}
+async function exportGpxFromRecord(r){
+  if(!r||typeof r!=="object"){
+    alert("找不到這筆訓練紀錄。");
+    return;
+  }
+  if(!Array.isArray(r.track)||!r.track.length){
+    alert("這筆紀錄沒有 GPS 軌跡。若這筆是在 GPX 修正前完成，軌跡可能沒有被保存。");
+    return;
+  }
+  const gpx=buildGpx(r);
+  const date=safeFilenamePart(r.date||r.datetime||new Date().toISOString().slice(0,10));
+  const name=safeFilenamePart(r.session||r.name||"training");
+  const filename=`dragonboat-${date}-${name}.gpx`;
+  try{
+    if(typeof File!=="undefined" && navigator.share && navigator.canShare){
+      const file=new File([gpx],filename,{type:"application/gpx+xml"});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:"龍舟訓練 GPX"});
+        return;
+      }
+    }
+  }catch(err){
+    if(err&&err.name==="AbortError")return;
+  }
+  downloadTextFile(filename,gpx,"application/gpx+xml;charset=utf-8");
+}
+function exportRecordGpxById(id,fallbackIndex){
+  const rows=getHistory();
+  let index=id?rows.findIndex(r=>r&&r.id===id):-1;
+  if(index<0)index=fallbackIndex;
+  return exportRecordGpx(index);
+}
+async function exportRecordGpx(index){
+  const rows=getHistory();
+  const r=rows[index];
+  return exportGpxFromRecord(r);
+}
+function exportLatestGpx(){
+  const rows=historyRecords();
+  if(!rows.length){alert("目前沒有訓練紀錄。");return}
+  const idx=rows.findIndex(r=>Array.isArray(r.track)&&r.track.length);
+  if(idx<0){
+    alert("目前的紀錄都沒有 GPS 軌跡。請用 V7.6 以上版本完成一趟新的訓練後再匯出 GPX。");
+    return;
+  }
+  exportRecordGpx(idx);
+}
+function renderHistory(){
+ const box=$("teamHistory"),arr=getHistory();
+ if(!arr.length){box.innerHTML='<div class="status">尚無訓練紀錄</div>';return}
+ box.innerHTML="";
+ const list=showAllHistory?arr:arr.slice(0,8);
+ list.forEach((r,i)=>{
+  const realIndex=arr.indexOf(r);
+  const d=new Date(r.at);
+  const card=document.createElement("div");
+  card.className="historyCard";
+  card.innerHTML=
+   '<div class="historyHead"><div><div class="historyTitle">'+escapeHtml(r.team||"未命名隊伍")+'｜'+escapeHtml(r.session||"一般訓練")+'</div>'+
+   '<div class="historyMeta">'+d.toLocaleString("zh-TW")+'<br>'+(r.member&&r.member.name?'隊員 '+escapeHtml(r.member.name)+(r.member.side?'｜'+escapeHtml(r.member.side)+'槳':'')+'<br>':'')+
+   '距離 '+Number(r.distance||0).toFixed(1)+' m｜時間 '+fmtTime(Number(r.time||0))+'<br>'+
+   '平均 '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜最高 '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
+   '平均槳頻 '+Math.round(Number(r.avgSpm||0))+' SPM｜總槳數 '+Math.round(Number(r.strokes||0))+
+   (r.twentyDistance!=null?'<br>20 槳距離 '+Number(r.twentyDistance).toFixed(1)+' m':'')+
+   '</div></div></div>'+
+   '<div class="historyActions"><button class="secondary" onclick="toggleHistoryDetail('+realIndex+',this)">詳細</button>'+
+   '<button class="secondary" onclick="editHistoryRecord('+realIndex+')">編輯</button>'+
+   '<button class="secondary" onclick="exportOneCsv('+realIndex+')">CSV</button>'+
+   '<button class="secondary" data-gpx-index="'+realIndex+'" onclick="exportRenderedRecordGpx(this)">GPX</button>'+
+   '<button class="smallDanger" onclick="deleteHistoryRecord('+realIndex+')">刪除</button></div>'+
+   '<div class="detailBox" id="detail-'+realIndex+'"></div>';
+  box.appendChild(card);
+ });
+ $("showAllHistoryBtn").textContent=showAllHistory?"只顯示最近 8 筆":"顯示全部紀錄";
+}
+
+function toggleHistoryDetail(index,btn){
+ const box=$("detail-"+index),arr=getHistory(),r=arr[index];
+ if(!box||!r)return;
+ const opening=!box.classList.contains("open");
+ document.querySelectorAll(".detailBox.open").forEach(x=>x.classList.remove("open"));
+ if(!opening){btn.textContent="詳細";return}
+ box.classList.add("open");btn.textContent="收合";
+ renderHistoryDetail(box,r,index);
+}
+function renderHistoryDetail(box,r,index){
+ const twentyDelta=(r.twentyStartSpeed!=null&&r.twentyEndSpeed!=null)?Number(r.twentyEndSpeed)-Number(r.twentyStartSpeed):null;
+ const splitHtml=(Array.isArray(r.splits)&&r.splits.length)?(()=>{
+   let prev=0;return r.splits.map(s=>{const leg=Number(s.time)-prev;prev=Number(s.time);return '<div class="detailSplit"><span>'+Number(s.distance)+' m</span><span>'+fmtTime(leg)+'</span></div>'}).join("")
+ })():'<div class="status">這筆紀錄沒有儲存分段資料</div>';
+ box.innerHTML=
+ '<div class="detailGrid">'+
+ '<div class="detailMetric"><div class="label">20 槳時間</div><div class="v">'+(r.twentyTime!=null?fmtTime(Number(r.twentyTime)):"—")+'</div></div>'+
+ '<div class="detailMetric"><div class="label">20 槳平均槳頻</div><div class="v">'+(r.twentySpm!=null?Math.round(Number(r.twentySpm))+" SPM":"—")+'</div></div>'+
+ '<div class="detailMetric"><div class="label">20 槳距離</div><div class="v">'+(r.twentyDistance!=null?Number(r.twentyDistance).toFixed(1)+" m":"—")+'</div></div>'+
+ '<div class="detailMetric"><div class="label">每槳平均距離</div><div class="v">'+(r.twentyDistance!=null?(Number(r.twentyDistance)/20).toFixed(2)+" m":"—")+'</div></div>'+
+ '<div class="detailMetric"><div class="label">20 槳起始速度</div><div class="v">'+(r.twentyStartSpeed!=null?Number(r.twentyStartSpeed).toFixed(1)+" km/h":"—")+'</div></div>'+
+ '<div class="detailMetric"><div class="label">20 槳速度增加</div><div class="v">'+(twentyDelta!=null?(twentyDelta>=0?"+":"")+twentyDelta.toFixed(1)+" km/h":"—")+'</div></div>'+
+ '</div>'+
+ '<div class="label">100m 分段</div>'+splitHtml+
+ '<div class="chartWrap"><div class="chartTitle">速度曲線（km/h）</div><canvas class="chart" id="speedChart-'+index+'"></canvas></div>'+
+ '<div class="chartWrap"><div class="chartTitle">槳頻曲線（SPM）</div><canvas class="chart" id="spmChart-'+index+'"></canvas></div>';
+ requestAnimationFrame(()=>{
+   drawMiniChart($("speedChart-"+index),Array.isArray(r.series)?r.series.map(x=>Number(x.speed)||0):[], "km/h");
+   drawMiniChart($("spmChart-"+index),Array.isArray(r.series)?r.series.map(x=>Number(x.spm)||0):[], "SPM");
+ });
+}
+function drawMiniChart(canvas,values,unit){
+ if(!canvas)return;
+ const rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ canvas.width=Math.max(1,Math.floor(rect.width*dpr));canvas.height=Math.max(1,Math.floor(rect.height*dpr));
+ const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);
+ const w=rect.width,h=rect.height,p=18;
+ ctx.clearRect(0,0,w,h);
+ ctx.strokeStyle="#303039";ctx.lineWidth=1;
+ for(let i=0;i<3;i++){const y=p+(h-2*p)*i/2;ctx.beginPath();ctx.moveTo(p,y);ctx.lineTo(w-p,y);ctx.stroke()}
+ if(!values||values.length<2){ctx.fillStyle="#888";ctx.font="12px sans-serif";ctx.fillText("這筆紀錄沒有曲線資料",p,h/2);return}
+ let min=Math.min(...values),max=Math.max(...values);if(max-min<1){max=min+1}
+ ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();
+ values.forEach((v,i)=>{const x=p+(w-2*p)*(i/(values.length-1)),y=h-p-(h-2*p)*((v-min)/(max-min));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)});
+ ctx.stroke();
+ ctx.fillStyle="#aaa";ctx.font="10px sans-serif";ctx.fillText(max.toFixed(0)+" "+unit,p,11);ctx.fillText(min.toFixed(0),p,h-4);
+}
+function askNumber(label,value,min=0){
+ const x=prompt(label,String(value==null?"":value));
+ if(x===null)return null;
+ const n=Number(x);
+ if(!isFinite(n)||n<min){alert("請輸入有效數字");return undefined}
+ return n;
+}
+function editHistoryRecord(index){
+ const arr=getHistory(),r=arr[index];
+ if(!r)return;
+ const team=prompt("隊伍／組合",r.team||"");
+ if(team===null)return;
+ const session=prompt("訓練標籤",r.session||"");
+ if(session===null)return;
+ const dateText=prompt("日期時間（YYYY-MM-DD HH:MM）",new Date(r.at).toLocaleString("sv-SE").slice(0,16));
+ if(dateText===null)return;
+ const parsedDate=new Date(dateText.replace(" ","T"));
+ if(isNaN(parsedDate.getTime())){alert("日期格式無效");return}
+
+ const distance=askNumber("距離（m）",Number(r.distance||0).toFixed(1)); if(distance===null||distance===undefined)return;
+ const seconds=askNumber("時間（秒）",(Number(r.time||0)/1000).toFixed(1)); if(seconds===null||seconds===undefined)return;
+ const avgSpeed=askNumber("平均速度（km/h）",Number(r.avgSpeed||0).toFixed(1)); if(avgSpeed===null||avgSpeed===undefined)return;
+ const maxSpeed2=askNumber("最高速度（km/h）",Number(r.maxSpeed||0).toFixed(1)); if(maxSpeed2===null||maxSpeed2===undefined)return;
+ const avgSpm2=askNumber("平均槳頻（SPM）",Math.round(Number(r.avgSpm||0))); if(avgSpm2===null||avgSpm2===undefined)return;
+ const strokes=askNumber("總槳數",Math.round(Number(r.strokes||0))); if(strokes===null||strokes===undefined)return;
+ const twenty=prompt("20 槳距離（m）；沒有資料可留白",r.twentyDistance==null?"":Number(r.twentyDistance).toFixed(1));
+ if(twenty===null)return;
+ let twentyDistance=null;
+ if(twenty.trim()!==""){
+   twentyDistance=Number(twenty);
+   if(!isFinite(twentyDistance)||twentyDistance<0){alert("20 槳距離格式無效");return}
+ }
+ const twentySec=prompt("20 槳時間（秒）；沒有資料可留白",r.twentyTime==null?"":(Number(r.twentyTime)/1000).toFixed(1));
+ if(twentySec===null)return;
+ let twentyTime=null;if(twentySec.trim()!==""){twentyTime=Number(twentySec)*1000;if(!isFinite(twentyTime)||twentyTime<0){alert("20 槳時間格式無效");return}}
+ const twentySpm=prompt("20 槳平均槳頻（SPM）；沒有資料可留白",r.twentySpm==null?"":Math.round(Number(r.twentySpm)));
+ if(twentySpm===null)return;
+ let twentySpmVal=null;if(twentySpm.trim()!==""){twentySpmVal=Number(twentySpm);if(!isFinite(twentySpmVal)||twentySpmVal<0){alert("20 槳槳頻格式無效");return}}
+
+ arr[index]={...r,team:team.trim()||"未命名隊伍",session:session.trim()||"一般訓練",at:parsedDate.toISOString(),
+   distance:distance,time:seconds*1000,avgSpeed:avgSpeed,maxSpeed:maxSpeed2,avgSpm:avgSpm2,strokes:strokes,twentyDistance:twentyDistance,twentyTime:twentyTime,twentySpm:twentySpmVal};
+ setHistory(arr);
+ renderHistory();
+}
+function deleteHistoryRecord(index){
+ const arr=getHistory(),r=arr[index];
+ if(!r)return;
+ if(!confirm("確定要刪除這筆訓練紀錄嗎？"))return;
+ arr.splice(index,1);
+ setHistory(arr);
+ renderHistory();
+}
+function clearAllHistory(){
+ const arr=getHistory();
+ if(!arr.length)return;
+ if(!confirm("確定要刪除全部 "+arr.length+" 筆訓練紀錄嗎？此動作無法復原。"))return;
+ localStorage.removeItem("dragonboatTeamHistory");
+ renderHistory();
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+document.querySelectorAll(".tabBtn").forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+$("saveMemberBtn").onclick=saveMember;
+$("cancelMemberEditBtn").onclick=clearMemberForm;
+$("speedResponse").value=speedResponseMode;
+$("speedResponse").onchange=()=>{
+  speedResponseMode=$("speedResponse").value;
+  localStorage.setItem("dragonboatSpeedResponse",speedResponseMode);
+  updateMain();
+};
+
+$("showAllHistoryBtn").onclick=()=>{showAllHistory=!showAllHistory;renderHistory()};
+$("clearHistoryBtn").onclick=clearAllHistory;
+$("startBtn").onclick=async()=>{
+if(running){stopRun();return}
+$("startBtn").disabled=true;
+const oldText=$("startBtn").textContent;
+try{
+  if(!motionEnabled) await enableMotion();
+  $("startBtn").textContent="GPS 定位中…";
+  await ensureGpsReady();
+  lastPos=null;speedSamples=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent="GPX 軌跡點：0";resetV69StrokeDetector();
+  $("startBtn").textContent="準備開始";
+  await countdownStart();
+}catch(e){
+  $("startBtn").textContent="開始訓練";
+  alert("尚未取得 GPS，因此沒有開始訓練。\n\n目前狀態："+$("gpsStatus").textContent);
+}finally{
+  $("startBtn").disabled=false;
+  if(!running)$("startBtn").textContent="開始訓練";
+}
+};$("exportCsvBtn").onclick=exportAllCsv;$("exportJsonBtn").onclick=exportAllJson;$("importJsonBtn").onclick=chooseBackupFile;$("importJsonFile").onchange=handleBackupFile;$("exportLatestGpxBtn").onclick=exportLatestGpx;$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
+document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
+setInterval(()=>{
+  if(motionEnabled && $("motionDiagText")){
+    const age=motionLastAt?performance.now()-motionLastAt:99999;
+    if(age>1800){
+      $("motionDiagText").textContent="沒有收到 Motion 資料";
+      $("motionDiagBar").style.width="0%";
+    }
+  }
+  if(running && gpsLastFixAt && Date.now()-gpsLastFixAt>10000){
+    gpsReady=false;gpsStatus("GPS 訊號暫時中斷","bad");
+  }
+  if(running && lastStrokeTime && performance.now()-lastStrokeTime>2200){
+    currentSpm=0;$("spm").textContent="0";$("strokeState").textContent="等待槳動";
+  }
+},500);
+const savedSens=localStorage.getItem("dragonboatSensitivity");
+if(savedSens&&sensCfg[savedSens]){
+  sensitivity=savedSens;
+  document.querySelectorAll("[data-sens]").forEach(x=>x.classList.toggle("active",x.dataset.sens===savedSens));
+}
+gpsStatus("尚未定位","warn");resetAll();renderHistory();renderMembers();renderMemberSelect();appInitialized=true;
+</script>
+</body>
+</html>
