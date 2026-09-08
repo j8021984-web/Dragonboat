@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.9.2</title>
+<title>Dragon Boat Speedometer V7.9.3</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -85,11 +85,20 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 .historyDropdown{display:none}
 .historyCard.open .historyDropdown{display:block}
 
+
+.historyDateGroup{margin-top:12px;border:1px solid #29292f;border-radius:16px;overflow:hidden;background:#0e0e12}
+.historyDateBtn{width:100%;border:0;background:#17171c;color:#fff;padding:14px 15px;display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:800;text-align:left}
+.historyDateBtn .dateMeta{font-size:12px;color:#aaa;font-weight:600;margin-top:3px}
+.historyDateChevron{font-size:22px;color:#aaa;transition:transform .2s ease}
+.historyDateGroup.open .historyDateChevron{transform:rotate(180deg)}
+.historyDateBody{display:none;padding:0 10px 10px}
+.historyDateGroup.open .historyDateBody{display:block}
+
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.9.2 · 體重＋訓練紀錄下拉版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.9.3 · 隊員編輯＋日期分類紀錄</div></div><div class="ver" id="clock"></div></div>
 <div class="tabNav">
   <button class="tabBtn active" data-page="training">訓練</button>
   <button class="tabBtn" data-page="history">訓練紀錄</button>
@@ -216,7 +225,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <button class="secondary" id="showAllHistoryBtn">顯示全部紀錄</button>
 <button class="smallDanger" id="clearHistoryBtn">刪除全部紀錄</button>
 </div>
-<div class="tiny">點擊紀錄可展開／收合，再查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。</div>
+<div class="tiny">訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。</div>
 </div>
 <div class="panel">
 <div class="label">資料備份／匯出</div>
@@ -678,20 +687,27 @@ function renderMembers(){
   const box=$("memberList"),arr=getMembers();
   if(!box)return;
   if(!arr.length){box.innerHTML='<div class="status">尚無隊員資料</div>';return}
-  box.innerHTML=arr.map(m=>
-    '<div class="memberCard"><div class="memberName">'+escapeHtml(m.name)+(m.nickname?'｜'+escapeHtml(m.nickname):'')+'</div>'+
-    '<div class="memberMeta">'+
-    (m.side?'側別：'+escapeHtml(m.side)+'槳<br>':'')+
-    (m.position?'位置：'+escapeHtml(m.position)+'<br>':'')+
-    (m.height?'身高：'+m.height+' cm<br>':'')+
-    (m.paddleLength?'槳長：'+m.paddleLength+' cm<br>':'')+
-    (m.weight?'體重：'+m.weight+' kg<br>':'')+
-    (m.note?'備註：'+escapeHtml(m.note):'')+
-    '</div><div class="memberActions">'+
-    '<button class="secondary" onclick="editMember('+JSON.stringify(m.id)+')">編輯</button>'+
-    '<button class="smallDanger" onclick="deleteMember('+JSON.stringify(m.id)+')">刪除</button>'+
-    '</div></div>'
-  ).join("");
+  box.innerHTML="";
+  arr.forEach((m,i)=>{
+    const card=document.createElement("div");
+    card.className="memberCard";
+    card.innerHTML=
+      '<div class="memberName">'+escapeHtml(m.name)+(m.nickname?'｜'+escapeHtml(m.nickname):'')+'</div>'+
+      '<div class="memberMeta">'+
+      (m.side?'側別：'+escapeHtml(m.side)+'槳<br>':'')+
+      (m.position?'位置：'+escapeHtml(m.position)+'<br>':'')+
+      (m.height?'身高：'+m.height+' cm<br>':'')+
+      (m.paddleLength?'槳長：'+m.paddleLength+' cm<br>':'')+
+      (m.weight?'體重：'+m.weight+' kg<br>':'')+
+      (m.note?'備註：'+escapeHtml(m.note):'')+
+      '</div><div class="memberActions">'+
+      '<button class="secondary memberEditBtn">編輯</button>'+
+      '<button class="smallDanger memberDeleteBtn">刪除</button>'+
+      '</div>';
+    card.querySelector(".memberEditBtn").onclick=()=>editMember(m.id);
+    card.querySelector(".memberDeleteBtn").onclick=()=>deleteMember(m.id);
+    box.appendChild(card);
+  });
 }
 function selectedMemberSnapshot(){
   const id=$("memberSelect")?$("memberSelect").value:"";
@@ -802,7 +818,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.9.2",
+    version:"7.9.3",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -905,7 +921,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.9.2"
+ creator="Dragon Boat Speedometer V7.9.3"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -980,33 +996,74 @@ function exportLatestGpx(){
   }
   exportRecordGpx(idx);
 }
+function historyDateKey(iso){
+ const d=new Date(iso);
+ if(isNaN(d.getTime()))return "未知日期";
+ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+ return `${y}-${m}-${day}`;
+}
+function historyDateLabel(key){
+ if(key==="未知日期")return key;
+ const [y,m,d]=key.split("-");
+ return `${y}/${Number(m)}/${Number(d)}`;
+}
+function toggleHistoryDate(key){
+ const el=document.getElementById("historyDate-"+key.replace(/[^0-9A-Za-z_-]/g,"_"));
+ if(el)el.classList.toggle("open");
+}
+function buildHistoryCard(r,realIndex){
+ const d=new Date(r.at);
+ const card=document.createElement("div");
+ card.className="historyCard";
+ card.id="historyCard-"+realIndex;
+ card.innerHTML=
+  '<button class="historySummaryBtn" onclick="toggleHistoryCard('+realIndex+')"><span><div class="historyTitle">'+escapeHtml(r.team||"未命名隊伍")+'｜'+escapeHtml(r.session||"一般訓練")+'</div>'+
+  '<div class="historyMeta">'+(isNaN(d.getTime())?"時間未知":d.toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit"}))+'<br>'+(r.member&&r.member.name?'隊員 '+escapeHtml(r.member.name)+(r.member.side?'｜'+escapeHtml(r.member.side)+'槳':'')+(r.member.weight?'｜'+Number(r.member.weight).toFixed(1)+' kg':'')+'<br>':'')+
+  '距離 '+Number(r.distance||0).toFixed(1)+' m｜時間 '+fmtTime(Number(r.time||0))+'<br>'+
+  '平均 '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜最高 '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
+  '平均槳頻 '+Math.round(Number(r.avgSpm||0))+' SPM｜總槳數 '+Math.round(Number(r.strokes||0))+
+  (r.twentyDistance!=null?'<br>20 槳距離 '+Number(r.twentyDistance).toFixed(1)+' m':'')+
+  '</div></span><span class="historyChevron">⌄</span></button>'+
+  '<div class="historyDropdown">'+
+  '<div class="historyActions"><button class="secondary" onclick="toggleHistoryDetail('+realIndex+',this)">詳細分析</button>'+
+  '<button class="secondary" onclick="editHistoryRecord('+realIndex+')">編輯</button>'+
+  '<button class="secondary" onclick="exportOneCsv('+realIndex+')">CSV</button>'+
+  '<button class="secondary" data-gpx-index="'+realIndex+'" onclick="exportRenderedRecordGpx(this)">GPX</button>'+
+  '<button class="smallDanger" onclick="deleteHistoryRecord('+realIndex+')">刪除</button></div>'+
+  '<div class="detailBox" id="detail-'+realIndex+'"></div></div>';
+ return card;
+}
 function renderHistory(){
  const box=$("teamHistory"),arr=getHistory();
  if(!arr.length){box.innerHTML='<div class="status">尚無訓練紀錄</div>';return}
  box.innerHTML="";
  const list=showAllHistory?arr:arr.slice(0,8);
- list.forEach((r,i)=>{
-  const realIndex=arr.indexOf(r);
-  const d=new Date(r.at);
-  const card=document.createElement("div");
-  card.className="historyCard";
-  card.id="historyCard-"+realIndex;
-  card.innerHTML=
-   '<button class="historySummaryBtn" onclick="toggleHistoryCard('+realIndex+')"><span><div class="historyTitle">'+escapeHtml(r.team||"未命名隊伍")+'｜'+escapeHtml(r.session||"一般訓練")+'</div>'+
-   '<div class="historyMeta">'+d.toLocaleString("zh-TW")+'<br>'+(r.member&&r.member.name?'隊員 '+escapeHtml(r.member.name)+(r.member.side?'｜'+escapeHtml(r.member.side)+'槳':'')+(r.member.weight?'｜'+Number(r.member.weight).toFixed(1)+' kg':'')+'<br>':'')+
-   '距離 '+Number(r.distance||0).toFixed(1)+' m｜時間 '+fmtTime(Number(r.time||0))+'<br>'+
-   '平均 '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜最高 '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
-   '平均槳頻 '+Math.round(Number(r.avgSpm||0))+' SPM｜總槳數 '+Math.round(Number(r.strokes||0))+
-   (r.twentyDistance!=null?'<br>20 槳距離 '+Number(r.twentyDistance).toFixed(1)+' m':'')+
-   '</div></span><span class="historyChevron">⌄</span></button>'+
-   '<div class="historyDropdown">'+
-   '<div class="historyActions"><button class="secondary" onclick="toggleHistoryDetail('+realIndex+',this)">詳細分析</button>'+
-   '<button class="secondary" onclick="editHistoryRecord('+realIndex+')">編輯</button>'+
-   '<button class="secondary" onclick="exportOneCsv('+realIndex+')">CSV</button>'+
-   '<button class="secondary" data-gpx-index="'+realIndex+'" onclick="exportRenderedRecordGpx(this)">GPX</button>'+
-   '<button class="smallDanger" onclick="deleteHistoryRecord('+realIndex+')">刪除</button></div>'+
-   '<div class="detailBox" id="detail-'+realIndex+'"></div></div>';
-  box.appendChild(card);
+ const groups=new Map();
+ list.forEach(r=>{
+   const key=historyDateKey(r.at);
+   if(!groups.has(key))groups.set(key,[]);
+   groups.get(key).push(r);
+ });
+ let groupNo=0;
+ groups.forEach((records,key)=>{
+   const group=document.createElement("div");
+   const safeKey=key.replace(/[^0-9A-Za-z_-]/g,"_");
+   group.className="historyDateGroup"+(groupNo===0?" open":"");
+   group.id="historyDate-"+safeKey;
+   const btn=document.createElement("button");
+   btn.className="historyDateBtn";
+   btn.innerHTML='<span>'+historyDateLabel(key)+'<div class="dateMeta">'+records.length+' 筆訓練紀錄</div></span><span class="historyDateChevron">⌄</span>';
+   btn.onclick=()=>toggleHistoryDate(key);
+   const body=document.createElement("div");
+   body.className="historyDateBody";
+   records.forEach(r=>{
+     const realIndex=arr.indexOf(r);
+     body.appendChild(buildHistoryCard(r,realIndex));
+   });
+   group.appendChild(btn);
+   group.appendChild(body);
+   box.appendChild(group);
+   groupNo++;
  });
  $("showAllHistoryBtn").textContent=showAllHistory?"只顯示最近 8 筆":"顯示全部紀錄";
 }
