@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.7</title>
+<title>Dragon Boat Speedometer V7.8</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.7 · 備份／還原版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8 · 即時速度／GPX修正版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -239,7 +239,7 @@ function onPosition(pos){
       speedKmh:(isFinite(gpsSpeed)&&gpsSpeed>=0)?gpsSpeed:null,
       distanceM:totalDistance,
       spm:currentSpm||0,
-      strokes:totalStrokes||0
+      strokes:totalStrokeCount||0
     });
     if(runTrack.length>20000)runTrack.shift();
   }
@@ -607,7 +607,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.7",
+    version:"7.8",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -694,7 +694,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.7"
+ creator="Dragon Boat Speedometer V7.8"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -706,18 +706,31 @@ function buildGpx(r){
 function safeFilenamePart(s){
   return String(s||"training").replace(/[\\/:*?"<>|]+/g,"-").trim().slice(0,60)||"training";
 }
-function exportRecordGpx(index){
+async function exportRecordGpx(index){
   const rows=historyRecords();
   const r=rows[index];
   if(!r){alert("找不到這筆訓練紀錄。");return}
   if(!Array.isArray(r.track)||!r.track.length){
-    alert("這筆紀錄沒有 GPS 軌跡。V7.6 以前完成的舊紀錄無法補回完整 GPX。");
+    alert("這筆紀錄沒有 GPS 軌跡。V7.8 修正前若測驗時 GPS 記錄中斷，該筆舊紀錄無法補回完整 GPX；請用 V7.8 完成一趟新的訓練。");
     return;
   }
   const gpx=buildGpx(r);
   const date=safeFilenamePart(r.date||r.datetime||new Date().toISOString().slice(0,10));
   const name=safeFilenamePart(r.session||r.name||"training");
-  downloadTextFile(`dragonboat-${date}-${name}.gpx`,gpx,"application/gpx+xml;charset=utf-8");
+  const filename=`dragonboat-${date}-${name}.gpx`;
+
+  try{
+    if(typeof File!=="undefined" && navigator.share && navigator.canShare){
+      const file=new File([gpx],filename,{type:"application/gpx+xml"});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:"龍舟訓練 GPX"});
+        return;
+      }
+    }
+  }catch(err){
+    if(err && err.name==="AbortError")return;
+  }
+  downloadTextFile(filename,gpx,"application/gpx+xml;charset=utf-8");
 }
 function exportLatestGpx(){
   const rows=historyRecords();
