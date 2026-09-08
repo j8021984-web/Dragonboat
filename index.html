@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.8.3</title>
+<title>Dragon Boat Speedometer V7.8.5</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.3 · 單筆GPX修正版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.8.5 · GPX軌跡狀態＋150m</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -78,6 +78,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <select id="mode">
 <option value="50">50m 測試</option>
 <option value="100">100m 測試</option>
+<option value="150">150m 測試</option>
 <option value="200">200m 測試</option>
 <option value="500" selected>500m 測試</option>
 <option value="800">800m 測試</option>
@@ -176,7 +177,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </div>
 <div class="panel">
 <div class="label">GPS / 感測狀態</div>
-<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
+<div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><div class="tiny" id="trackStatus">GPX 軌跡點：0</div><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
 <div class="status" id="sensorStatus">動作感測：未啟用</div><div class="tiny">重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。</div>
 <div class="tiny">建議 GPS 精度進入 ±15m 以內再開始正式測試。</div>
 </div>
@@ -242,6 +243,8 @@ function onPosition(pos){
       strokes:totalStrokeCount||0
     });
     if(runTrack.length>20000)runTrack.shift();
+    const ts=$("trackStatus");
+    if(ts)ts.textContent="GPX 軌跡點："+runTrack.length+" ✓";
   }
 
   if(isFinite(gpsSpeed)&&gpsSpeed>=0&&gpsSpeed<=40){
@@ -378,7 +381,7 @@ function resetStrokeDetectorForNewRun(){
   }
 }
 function startRun(){
-resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;
+resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent="GPX 軌跡點：0";lastSeriesSecond=-1;
 running=true;startedAt=performance.now();lastPos=null;
 $("startBtn").textContent="停止訓練";$("startBtn").className="danger";
 startTimerLoop();requestWakeLock();
@@ -610,7 +613,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.8.3",
+    version:"7.8.5",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -697,7 +700,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.8.3"
+ creator="Dragon Boat Speedometer V7.8.5"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -917,7 +920,7 @@ try{
   if(!motionEnabled) await enableMotion();
   $("startBtn").textContent="GPS 定位中…";
   await ensureGpsReady();
-  lastPos=null;speedSamples=[];runTrack=[];resetV69StrokeDetector();
+  lastPos=null;speedSamples=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent="GPX 軌跡點：0";resetV69StrokeDetector();
   $("startBtn").textContent="準備開始";
   await countdownStart();
 }catch(e){
