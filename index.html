@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.10.1</title>
+<title>Dragon Boat Speedometer V7.10.2</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -98,7 +98,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.10.1 · Full i18n / 完整翻譯版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.10.2 · Full UI i18n</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -341,7 +341,31 @@ const I18N={
   '20槳SPM':'20-Stroke SPM',
   '20槳距離(m)':'20-Stroke Distance (m)',
   '每槳平均距離(m)':'Avg Distance / Stroke (m)',
-  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'History is grouped by date. Open a date, then a session for analysis, editing, CSV or GPX. New sessions save 100m splits, 20-stroke data, and speed/stroke-rate curves.'
+  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'History is grouped by date. Open a date, then a session for analysis, editing, CSV or GPX. New sessions save 100m splits, 20-stroke data, and speed/stroke-rate curves.',
+  '重設 / 下一趟':'Reset / Next Run',
+  '自動槳頻':'Auto Stroke Rate',
+  '尚未啟用動作感測':'Motion sensing not enabled',
+  '信心度：':'Confidence: ',
+  '主軸：':'Main axis: ',
+  '未判定':'Not determined',
+  '感測器訊號 / 靜止判斷':'Sensor Signal / Stillness Detection',
+  '等待資料':'Waiting for data',
+  'Motion事件：':'Motion events: ',
+  '訊號：':'Signal: ',
+  '允許動作感測':'Enable Motion Sensing',
+  '槳頻設定 / 重新校正':'Stroke Rate Setup / Recalibrate',
+  '請固定手機。':'Keep the phone secured.',
+  '一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。':'Starting training activates GPS, timer, auto stroke rate, total strokes, 100m splits and first-20-stroke analysis.',
+  '隊伍 / 組合':'Team / Crew',
+  '訓練標籤':'Training Label',
+  '例如：比賽配置 A':'e.g. Race Setup A',
+  '狀態':'Status',
+  '待機':'Standby',
+  '左槳':'Left',
+  '右槳':'Right',
+  '左':'Left',
+  '右':'Right',
+  '槳':' side'
  },
  "ja":{
   "訓練":"トレーニング","訓練紀錄":"トレーニング履歴","隊員資料庫":"選手データ",
@@ -402,7 +426,31 @@ const I18N={
   '20槳SPM':'20ストロークSPM',
   '20槳距離(m)':'20ストローク距離 (m)',
   '每槳平均距離(m)':'1ストローク平均距離 (m)',
-  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'履歴は日付ごとに分類されます。日付を開き、各記録から分析・編集・CSV・GPXを確認できます。新しい記録には100mスプリット、20ストロークデータ、速度／ストロークレート曲線が保存されます。'
+  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'履歴は日付ごとに分類されます。日付を開き、各記録から分析・編集・CSV・GPXを確認できます。新しい記録には100mスプリット、20ストロークデータ、速度／ストロークレート曲線が保存されます。',
+  '重設 / 下一趟':'リセット / 次の走行',
+  '自動槳頻':'自動ストロークレート',
+  '尚未啟用動作感測':'モーションセンサー未有効',
+  '信心度：':'信頼度：',
+  '主軸：':'主軸：',
+  '未判定':'未判定',
+  '感測器訊號 / 靜止判斷':'センサー信号 / 静止判定',
+  '等待資料':'データ待ち',
+  'Motion事件：':'モーションイベント：',
+  '訊號：':'信号：',
+  '允許動作感測':'モーションセンサーを許可',
+  '槳頻設定 / 重新校正':'ストロークレート設定 / 再校正',
+  '請固定手機。':'スマートフォンを固定してください。',
+  '一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。':'開始するとGPS、計時、自動ストロークレート、総ストローク数、100mスプリット、最初の20ストローク分析を同時に開始します。',
+  '隊伍 / 組合':'チーム / クルー',
+  '訓練標籤':'トレーニングラベル',
+  '例如：比賽配置 A':'例：レース編成 A',
+  '狀態':'状態',
+  '待機':'待機',
+  '左槳':'左',
+  '右槳':'右',
+  '左':'左',
+  '右':'右',
+  '槳':'側'
  },
  "ko":{
   "訓練":"훈련","訓練紀錄":"훈련 기록","隊員資料庫":"선수 데이터",
@@ -463,7 +511,31 @@ const I18N={
   '20槳SPM':'20스트로크 SPM',
   '20槳距離(m)':'20스트로크 거리 (m)',
   '每槳平均距離(m)':'스트로크당 평균 거리 (m)',
-  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'훈련 기록은 날짜별로 분류됩니다. 날짜를 펼친 뒤 각 기록에서 분석, 편집, CSV, GPX를 확인할 수 있습니다. 새 기록에는 100m 구간, 20스트로크 데이터, 속도/스트로크 레이트 그래프가 저장됩니다.'
+  '訓練紀錄先依日期分類；點日期可展開當天紀錄，再點單筆紀錄查看詳細分析、編輯、CSV 或 GPX。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。':'훈련 기록은 날짜별로 분류됩니다. 날짜를 펼친 뒤 각 기록에서 분석, 편집, CSV, GPX를 확인할 수 있습니다. 새 기록에는 100m 구간, 20스트로크 데이터, 속도/스트로크 레이트 그래프가 저장됩니다.',
+  '重設 / 下一趟':'초기화 / 다음 훈련',
+  '自動槳頻':'자동 스트로크 레이트',
+  '尚未啟用動作感測':'모션 센서가 활성화되지 않음',
+  '信心度：':'신뢰도: ',
+  '主軸：':'주축: ',
+  '未判定':'미확인',
+  '感測器訊號 / 靜止判斷':'센서 신호 / 정지 판정',
+  '等待資料':'데이터 대기',
+  'Motion事件：':'모션 이벤트: ',
+  '訊號：':'신호: ',
+  '允許動作感測':'모션 센서 허용',
+  '槳頻設定 / 重新校正':'스트로크 레이트 설정 / 재보정',
+  '請固定手機。':'휴대폰을 고정하세요.',
+  '一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與前 20 槳分析。':'훈련 시작 시 GPS, 타이머, 자동 스트로크 레이트, 총 스트로크, 100m 구간 및 첫 20스트로크 분석이 함께 시작됩니다.',
+  '隊伍 / 組合':'팀 / 크루',
+  '訓練標籤':'훈련 라벨',
+  '例如：比賽配置 A':'예: 경기 구성 A',
+  '狀態':'상태',
+  '待機':'대기',
+  '左槳':'왼쪽',
+  '右槳':'오른쪽',
+  '左':'왼쪽',
+  '右':'오른쪽',
+  '槳':'사이드'
  }
 };
 let currentLang="zh-TW";
@@ -492,26 +564,36 @@ function tr(s){
  Object.keys(d).sort((a,b)=>b.length-a.length).forEach(k=>{if(out.includes(k))out=out.split(k).join(d[k])});
  return out;
 }
+function translateTextNodes(root=document.body){
+ const dict=I18N[currentLang]||{};
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+ const nodes=[];
+ while(walker.nextNode())nodes.push(walker.currentNode);
+ nodes.forEach(node=>{
+   const parent=node.parentElement;
+   if(!parent||["SCRIPT","STYLE"].includes(parent.tagName))return;
+   if(!node._i18nOriginal)node._i18nOriginal=node.nodeValue;
+   const original=node._i18nOriginal;
+   const trimmed=original.trim();
+   if(!trimmed)return;
+   const lead=original.match(/^\s*/)[0],trail=original.match(/\s*$/)[0];
+   node.nodeValue=lead+(currentLang==="zh-TW"?trimmed:tr(trimmed))+trail;
+ });
+ document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(el=>{
+   if(!el.dataset.i18nPlaceholder)el.dataset.i18nPlaceholder=el.getAttribute("placeholder")||"";
+   el.setAttribute("placeholder",currentLang==="zh-TW"?el.dataset.i18nPlaceholder:tr(el.dataset.i18nPlaceholder));
+ });
+}
 function translateStaticUI(){
  currentLang=$("languageSelect")?$("languageSelect").value:currentLang;
  document.documentElement.lang=currentLang;
- const dict=I18N[currentLang]||{};
- const selectors=".label,.tabBtn,button:not(.historySummaryBtn):not(.historyDateBtn),option,.status,.tiny,.historyTitle,.chartTitle";
- document.querySelectorAll(selectors).forEach(el=>{
-   if(el.id==="clock")return;
-   if(!el.dataset.i18nOriginal)el.dataset.i18nOriginal=el.textContent.trim();
-   const original=el.dataset.i18nOriginal;
-   if(currentLang==="zh-TW")el.textContent=original;
-   else if(dict[original])el.textContent=dict[original];
- });
- document.querySelectorAll(".formField label").forEach(el=>{
-   if(!el.dataset.i18nOriginal)el.dataset.i18nOriginal=el.textContent.trim();
-   const original=el.dataset.i18nOriginal;
-   el.textContent=currentLang==="zh-TW"?original:(dict[original]||original);
- });
- // Re-render dynamic areas in selected language.
+ translateTextNodes(document.body);
  renderMemberSelect();renderMembers();renderHistory();
+ // Dynamic areas were rebuilt after the first pass.
+ translateTextNodes($("memberList"));
+ translateTextNodes($("teamHistory"));
 }
+
 function setLanguage(lang){
  currentLang=lang;
  localStorage.setItem(LANG_KEY,lang);
@@ -942,7 +1024,7 @@ function renderMembers(){
     card.innerHTML=
       '<div class="memberName">'+escapeHtml(m.name)+(m.nickname?'｜'+escapeHtml(m.nickname):'')+'</div>'+
       '<div class="memberMeta">'+
-      (m.side?tr('側別：')+escapeHtml(m.side)+'<br>':'')+
+      (m.side?tr('側別：')+tr(m.side+'槳')+'<br>':'')+
       (m.position?tr('位置：')+escapeHtml(m.position)+'<br>':'')+
       (m.height?tr('身高：')+m.height+' cm<br>':'')+
       (m.paddleLength?tr('槳長：')+m.paddleLength+' cm<br>':'')+
@@ -1066,7 +1148,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.10.1",
+    version:"7.10.2",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1169,7 +1251,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.10.1"
+ creator="Dragon Boat Speedometer V7.10.2"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -1266,7 +1348,7 @@ function buildHistoryCard(r,realIndex){
  card.id="historyCard-"+realIndex;
  card.innerHTML=
   '<button class="historySummaryBtn" onclick="toggleHistoryCard('+realIndex+')"><span><div class="historyTitle">'+escapeHtml(r.team||tr("未命名隊伍"))+'｜'+escapeHtml(r.session||tr("一般訓練"))+'</div>'+
-  '<div class="historyMeta">'+(isNaN(d.getTime())?tr("時間未知"):d.toLocaleTimeString(currentLocale(),{hour:"2-digit",minute:"2-digit",second:"2-digit"}))+'<br>'+(r.member&&r.member.name?tr('隊員 ')+escapeHtml(r.member.name)+(r.member.side?'｜'+escapeHtml(r.member.side)+'槳':'')+(r.member.weight?'｜'+Number(r.member.weight).toFixed(1)+' kg':'')+'<br>':'')+
+  '<div class="historyMeta">'+(isNaN(d.getTime())?tr("時間未知"):d.toLocaleTimeString(currentLocale(),{hour:"2-digit",minute:"2-digit",second:"2-digit"}))+'<br>'+(r.member&&r.member.name?tr('隊員 ')+escapeHtml(r.member.name)+(r.member.side?'｜'+tr(r.member.side+'槳'):'')+(r.member.weight?'｜'+Number(r.member.weight).toFixed(1)+' kg':'')+'<br>':'')+
   tr('距離')+' '+Number(r.distance||0).toFixed(1)+' m｜'+tr('時間')+' '+fmtTime(Number(r.time||0))+'<br>'+
   tr('平均')+' '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜'+tr('最高')+' '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
   tr('平均槳頻')+' '+Math.round(Number(r.avgSpm||0))+' SPM｜'+tr('總槳數')+' '+Math.round(Number(r.strokes||0))+
