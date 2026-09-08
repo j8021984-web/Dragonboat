@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.6</title>
+<title>Dragon Boat Speedometer V7.7</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -65,7 +65,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.6 · GPX軌跡匯出版</div></div><div class="ver" id="clock"></div></div>
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.7 · 備份／還原版</div></div><div class="ver" id="clock"></div></div>
 
 <div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜平滑速度</div></div>
 <div class="panel countdown" id="countdown">3</div>
@@ -163,6 +163,17 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="tiny">每筆紀錄可查看詳細分析、編輯或刪除。新紀錄會保存 100m 分段、20 槳數據，以及速度／槳頻曲線。</div>
 </div>
 <div class="panel"><div class="label">每 100m 分段</div><div id="splits"><div class="status">尚無分段紀錄</div></div></div>
+<div class="panel">
+<div class="label">資料備份／匯出</div>
+<div class="historyTools" style="margin-top:10px">
+<button class="secondary" id="exportCsvBtn">匯出全部 CSV</button>
+<button class="secondary" id="exportJsonBtn">完整備份 JSON</button>
+<button class="secondary" id="importJsonBtn">匯入備份 JSON</button>
+<button class="secondary" id="exportLatestGpxBtn">匯出最新一趟 GPX</button>
+<input id="importJsonFile" type="file" accept=".json,application/json" style="display:none">
+</div>
+<div class="tiny">更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。</div>
+</div>
 <div class="panel">
 <div class="label">GPS / 感測狀態</div>
 <div class="status" id="gpsStatus">尚未定位</div><div style="margin-top:8px"><button class="secondary" id="gpsTestBtn">GPS 測試／重新定位</button></div>
@@ -596,7 +607,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.6",
+    version:"7.7",
     exportedAt:new Date().toISOString(),
     records:rows
   };
@@ -612,6 +623,51 @@ function exportOneCsv(index){
   downloadTextFile("dragonboat-session-"+(index+1)+".csv",csv,"text/csv;charset=utf-8");
 }
 
+
+function normalizeBackupRecords(data){
+  if(Array.isArray(data))return data;
+  if(data&&Array.isArray(data.records))return data.records;
+  if(data&&Array.isArray(data.history))return data.history;
+  return null;
+}
+function recordFingerprint(r){
+  return [
+    r.date||r.datetime||r.createdAt||r.startTime||"",
+    r.session||r.name||"",
+    r.mode||r.target||"",
+    Math.round(Number(r.distance||0)*10)/10,
+    Math.round(Number(r.duration||r.time||0)*10)/10
+  ].join("|");
+}
+function chooseBackupFile(){
+  const f=$("importJsonFile");f.value="";f.click();
+}
+function handleBackupFile(e){
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(String(reader.result||""));
+      const incoming=normalizeBackupRecords(data);
+      if(!incoming)throw new Error("無法辨識備份格式");
+      if(!confirm(`找到 ${incoming.length} 筆紀錄。將與目前資料合併並略過重複紀錄，是否繼續？`))return;
+      const existing=historyRecords(), seen=new Set(existing.map(recordFingerprint));
+      let added=0,dup=0;
+      incoming.forEach(r=>{
+        if(!r||typeof r!=="object"||Array.isArray(r))return;
+        const fp=recordFingerprint(r);
+        if(seen.has(fp)){dup++;return}
+        existing.push(r);seen.add(fp);added++;
+      });
+      existing.sort((a,b)=>(Date.parse(b.date||b.datetime||b.createdAt||b.startTime||"")||0)-(Date.parse(a.date||a.datetime||a.createdAt||a.startTime||"")||0));
+      const kept=existing.slice(0,100);
+      localStorage.setItem(HISTORY_KEY,JSON.stringify(kept));
+      renderHistory();
+      alert(`匯入完成：新增 ${added} 筆，略過 ${dup} 筆重複紀錄。`);
+    }catch(err){alert("匯入失敗："+(err.message||"JSON 格式錯誤"))}
+  };
+  reader.readAsText(file);
+}
 function xmlEscape(v){
   return String(v??"")
     .replace(/&/g,"&amp;")
@@ -638,7 +694,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.6"
+ creator="Dragon Boat Speedometer V7.7"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -668,7 +724,7 @@ function exportLatestGpx(){
   if(!rows.length){alert("目前沒有訓練紀錄。");return}
   const idx=rows.findIndex(r=>Array.isArray(r.track)&&r.track.length);
   if(idx<0){
-    alert("目前的紀錄都沒有 GPS 軌跡。請用 V7.6 完成一趟新的訓練後再匯出 GPX。");
+    alert("目前的紀錄都沒有 GPS 軌跡。請用 V7.6 以上版本完成一趟新的訓練後再匯出 GPX。");
     return;
   }
   exportRecordGpx(idx);
@@ -829,7 +885,7 @@ try{
   $("startBtn").disabled=false;
   if(!running)$("startBtn").textContent="開始訓練";
 }
-};$("exportCsvBtn").onclick=exportAllCsv;$("exportJsonBtn").onclick=exportAllJson;$("exportLatestGpxBtn").onclick=exportLatestGpx;$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
+};$("exportCsvBtn").onclick=exportAllCsv;$("exportJsonBtn").onclick=exportAllJson;$("importJsonBtn").onclick=chooseBackupFile;$("importJsonFile").onchange=handleBackupFile;$("exportLatestGpxBtn").onclick=exportLatestGpx;$("gpsTestBtn").onclick=gpsDiagnostic;$("resetBtn").onclick=resetAll;$("motionBtn").onclick=enableMotion;$("calibrateBtn").onclick=beginCalibration;
 document.querySelectorAll("[data-sens]").forEach(b=>b.onclick=()=>{sensitivity=b.dataset.sens;localStorage.setItem("dragonboatSensitivity",sensitivity);document.querySelectorAll("[data-sens]").forEach(x=>x.classList.remove("active"));b.classList.add("active")});
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&running)requestWakeLock()});
 setInterval(()=>{
