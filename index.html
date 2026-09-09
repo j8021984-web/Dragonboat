@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.14</title>
+<title>Dragon Boat Speedometer V7.15</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -131,7 +131,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.14 · 完整儀表板模式</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.15 · 自由訓練停止條件</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -184,6 +184,20 @@ body.training-active #liveDashboardPanel{display:block}
 <option value="start">起步槳測試</option></select>
 <div class="formField"><label>起步測試槳數</label><input id="startStrokeTarget" type="number" inputmode="numeric" min="0" max="100" step="1" value="20" placeholder="0 = 關閉"></div>
 <div class="tiny" id="startStrokeModeHint"></div>
+
+<div id="freeStopSettings" class="formField" style="display:none">
+  <label>自由訓練停止條件</label>
+  <select id="freeStopType">
+    <option value="manual">不限（手動停止）</option>
+    <option value="time">指定時間</option>
+    <option value="distance">指定距離</option>
+  </select>
+  <div id="freeStopValueWrap" style="display:none;margin-top:10px">
+    <input id="freeStopValue" type="number" inputmode="decimal" min="0.1" step="0.1" value="10">
+    <div class="tiny" id="freeStopUnit">分鐘</div>
+  </div>
+  <div class="tiny">即使設定自動停止條件，仍可隨時按「停止訓練」手動結束。</div>
+</div>
 <div class="grid">
 <div class="metric"><div class="label">時間</div><div class="num" id="time">00:00.0</div></div>
 <div class="metric"><div class="label">距離</div><div class="num"><span id="distance">0</span> m</div></div>
@@ -437,7 +451,13 @@ const I18N={
   '起步槳測試':'Start Stroke Test',
   '起步槳測試模式':'Start Stroke Test Mode',
   '此模式會在完成設定槳數後自動停止訓練。':'This mode stops automatically when the configured stroke count is completed.',
-  '顯示訓練設定':'Show Training Setup'
+  '顯示訓練設定':'Show Training Setup',
+  '自由訓練停止條件':'Free Training Stop Condition',
+  '不限（手動停止）':'Unlimited (Manual Stop)',
+  '指定時間':'Set Time',
+  '指定距離':'Set Distance',
+  '分鐘':'minutes',
+  '即使設定自動停止條件，仍可隨時按「停止訓練」手動結束。':'You can still tap Stop Training at any time, even with an automatic stop condition.'
  },
  "ja":{
   "訓練":"トレーニング","訓練紀錄":"トレーニング履歴","隊員資料庫":"選手データ",
@@ -543,7 +563,13 @@ const I18N={
   '起步槳測試':'スタートストロークテスト',
   '起步槳測試模式':'スタートストロークテストモード',
   '此模式會在完成設定槳數後自動停止訓練。':'設定したストローク数を完了すると自動的に停止します。',
-  '顯示訓練設定':'トレーニング設定を表示'
+  '顯示訓練設定':'トレーニング設定を表示',
+  '自由訓練停止條件':'フリートレーニング停止条件',
+  '不限（手動停止）':'無制限（手動停止）',
+  '指定時間':'時間指定',
+  '指定距離':'距離指定',
+  '分鐘':'分',
+  '即使設定自動停止條件，仍可隨時按「停止訓練」手動結束。':'自動停止条件を設定していても、いつでも「停止」を押して手動終了できます。'
  },
  "ko":{
   "訓練":"훈련","訓練紀錄":"훈련 기록","隊員資料庫":"선수 데이터",
@@ -649,7 +675,13 @@ const I18N={
   '起步槳測試':'스타트 스트로크 테스트',
   '起步槳測試模式':'스타트 스트로크 테스트 모드',
   '此模式會在完成設定槳數後自動停止訓練。':'설정한 스트로크 수를 완료하면 자동으로 훈련이 종료됩니다.',
-  '顯示訓練設定':'훈련 설정 보기'
+  '顯示訓練設定':'훈련 설정 보기',
+  '自由訓練停止條件':'자유 훈련 종료 조건',
+  '不限（手動停止）':'제한 없음 (수동 종료)',
+  '指定時間':'시간 지정',
+  '指定距離':'거리 지정',
+  '分鐘':'분',
+  '即使設定自動停止條件，仍可隨時按「停止訓練」手動結束。':'자동 종료 조건을 설정해도 언제든지 훈련 중지를 눌러 수동 종료할 수 있습니다.'
  }
 };
 let currentLang="zh-TW";
@@ -671,6 +703,27 @@ function setTrainingDashboard(active){
      window.scrollTo({top:Math.max(0,y),behavior:"smooth"});
    },360);
  }
+}
+
+let freeStopType=localStorage.getItem("dragonboatFreeStopType")||"manual";
+let freeStopValue=Number(localStorage.getItem("dragonboatFreeStopValue")||10);
+function updateFreeStopUi(){
+ const box=$("freeStopSettings");
+ if(!box||!$("mode"))return;
+ const isFree=$("mode").value==="free";
+ box.style.display=isFree?"block":"none";
+ if($("freeStopType"))$("freeStopType").value=freeStopType;
+ const wrap=$("freeStopValueWrap");
+ if(wrap)wrap.style.display=isFree&&freeStopType!=="manual"?"block":"none";
+ if($("freeStopValue"))$("freeStopValue").value=freeStopValue;
+ if($("freeStopUnit"))$("freeStopUnit").textContent=freeStopType==="distance"?"m":tr("分鐘");
+}
+function checkFreeStop(){
+ if(!running||!$("mode")||$("mode").value!=="free"||freeStopType==="manual")return;
+ const v=Math.max(0,Number(freeStopValue)||0);
+ if(v<=0)return;
+ if(freeStopType==="distance"&&totalDistance>=v){stopRun();return;}
+ if(freeStopType==="time"&&(Date.now()-startTime)>=v*60000){stopRun();return;}
 }
 function isStartStrokeMode(){
  return $("mode") && $("mode").value==="start";
@@ -744,6 +797,7 @@ function translateStaticUI(){
  translateTextNodes($("memberList"));
  translateTextNodes($("teamHistory"));
  updateStartStrokeUi();
+ updateFreeStopUi();
 }
 
 function setLanguage(lang){
@@ -784,7 +838,8 @@ function updateDashboardMirror(){
  if($("dashAccuracy")&&$("accuracy"))$("dashAccuracy").textContent=$("accuracy").textContent;
 }
 function updateMain(){
- updateDashboardMirror();const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
+ updateDashboardMirror();
+ checkFreeStop();const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
 if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSecond=sec;runSeries.push({t:e,d:totalDistance,speed:sp,spm:currentSpm});if(runSeries.length>3600)runSeries.shift()}}}
 function startTimerLoop(){clearInterval(timerHandle);timerHandle=setInterval(updateMain,100)} function stopTimerLoop(){clearInterval(timerHandle);timerHandle=null;updateMain()}
 function gpsStatus(t,c="warn"){
@@ -813,7 +868,7 @@ function onPosition(pos){
       const cs=dist/dt*3.6;
       if((!gpsSpeed||gpsSpeed<0.5)&&cs<35)gpsSpeed=cs;
       if(running&&acc<=30&&dist<40){
-        totalDistance+=dist;checkSplits();checkTarget();
+        totalDistance+=dist;checkSplits();checkTarget();checkFreeStop();
       }
     }
   }
@@ -1234,6 +1289,8 @@ function saveTeamRecord(){
   session:$("sessionName").value.trim()||"一般訓練",
   member:selectedMemberSnapshot(),
   mode:$("mode").value==="start"?"start":Number($("mode").value),
+  freeStopType:$("mode").value==="free"?freeStopType:null,
+  freeStopValue:$("mode").value==="free"&&freeStopType!=="manual"?freeStopValue:null,
   testType:isStartStrokeMode()?"startStroke":null,
   time:elapsedBefore,
   distance:totalDistance,
@@ -1316,7 +1373,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.14",
+    version:"7.15",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1419,7 +1476,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.14"
+ creator="Dragon Boat Speedometer V7.15"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -1687,6 +1744,25 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":
 currentLang=detectLanguage();
 $("languageSelect").value=currentLang;
 $("languageSelect").onchange=()=>setLanguage($("languageSelect").value);
+
+if($("freeStopType")){
+ $("freeStopType").value=freeStopType;
+ $("freeStopType").onchange=()=>{
+  freeStopType=$("freeStopType").value;
+  localStorage.setItem("dragonboatFreeStopType",freeStopType);
+  updateFreeStopUi();
+ };
+}
+if($("freeStopValue")){
+ $("freeStopValue").value=freeStopValue;
+ $("freeStopValue").oninput=()=>{
+  freeStopValue=Math.max(0,Number($("freeStopValue").value)||0);
+  localStorage.setItem("dragonboatFreeStopValue",String(freeStopValue));
+ };
+}
+if($("mode"))$("mode").addEventListener("change",updateFreeStopUi);
+updateFreeStopUi();
+
 
 ["time","distance","avgSpeed","maxSpeed","estimate","accuracy"].forEach(id=>{
  const el=$(id);
