@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.15</title>
+<title>Dragon Boat Speedometer V7.15.1</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -131,7 +131,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.15 · 自由訓練停止條件</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.15.1 · 自由訓練停止條件修正版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -705,12 +705,15 @@ function setTrainingDashboard(active){
  }
 }
 
+function isFreeTrainingMode(){
+ return $("mode") && String($("mode").value)==="0";
+}
 let freeStopType=localStorage.getItem("dragonboatFreeStopType")||"manual";
 let freeStopValue=Number(localStorage.getItem("dragonboatFreeStopValue")||10);
 function updateFreeStopUi(){
  const box=$("freeStopSettings");
  if(!box||!$("mode"))return;
- const isFree=$("mode").value==="free";
+ const isFree=isFreeTrainingMode();
  box.style.display=isFree?"block":"none";
  if($("freeStopType"))$("freeStopType").value=freeStopType;
  const wrap=$("freeStopValueWrap");
@@ -719,7 +722,7 @@ function updateFreeStopUi(){
  if($("freeStopUnit"))$("freeStopUnit").textContent=freeStopType==="distance"?"m":tr("分鐘");
 }
 function checkFreeStop(){
- if(!running||!$("mode")||$("mode").value!=="free"||freeStopType==="manual")return;
+ if(!running||!isFreeTrainingMode()||freeStopType==="manual")return;
  const v=Math.max(0,Number(freeStopValue)||0);
  if(v<=0)return;
  if(freeStopType==="distance"&&totalDistance>=v){stopRun();return;}
@@ -1289,8 +1292,8 @@ function saveTeamRecord(){
   session:$("sessionName").value.trim()||"一般訓練",
   member:selectedMemberSnapshot(),
   mode:$("mode").value==="start"?"start":Number($("mode").value),
-  freeStopType:$("mode").value==="free"?freeStopType:null,
-  freeStopValue:$("mode").value==="free"&&freeStopType!=="manual"?freeStopValue:null,
+  freeStopType:isFreeTrainingMode()?freeStopType:null,
+  freeStopValue:isFreeTrainingMode()&&freeStopType!=="manual"?freeStopValue:null,
   testType:isStartStrokeMode()?"startStroke":null,
   time:elapsedBefore,
   distance:totalDistance,
@@ -1373,7 +1376,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.15",
+    version:"7.15.1",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1476,7 +1479,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.15"
+ creator="Dragon Boat Speedometer V7.15.1"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -1553,7 +1556,7 @@ function exportLatestGpx(){
 }
 function modeLabel(mode){
  if(mode==="start")return tr("起步槳測試");
- if(mode==="free")return tr("自由訓練");
+ if(mode==="free"||String(mode)==="0")return tr("自由訓練");
  const n=Number(mode);
  return isFinite(n)&&n>0?`${n}m`:String(mode||"");
 }
@@ -1744,6 +1747,9 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":
 currentLang=detectLanguage();
 $("languageSelect").value=currentLang;
 $("languageSelect").onchange=()=>setLanguage($("languageSelect").value);
+const modeUiSyncHandler=()=>{updateStartStrokeUi();updateFreeStopUi();};
+if($("mode"))$("mode").addEventListener("change",modeUiSyncHandler);
+
 
 if($("freeStopType")){
  $("freeStopType").value=freeStopType;
