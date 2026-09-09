@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.11.1</title>
+<title>Dragon Boat Speedometer V7.12</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -98,7 +98,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.11.1 · 起步槳同步修正版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.12 · 獨立起步槳測試</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -147,8 +147,10 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <option value="1000">1000m 測試</option>
 <option value="2000">2000m 測試</option>
 <option value="0">自由訓練</option>
-</select>
+
+<option value="start">起步槳測試</option></select>
 <div class="formField"><label>起步測試槳數</label><input id="startStrokeTarget" type="number" inputmode="numeric" min="0" max="100" step="1" value="20" placeholder="0 = 關閉"></div>
+<div class="tiny" id="startStrokeModeHint"></div>
 <div class="grid">
 <div class="metric"><div class="label">時間</div><div class="num" id="time">00:00.0</div></div>
 <div class="metric"><div class="label">距離</div><div class="num"><span id="distance">0</span> m</div></div>
@@ -383,7 +385,10 @@ const I18N={
   '起步測試：分析完成':'Start test: complete',
   '起步測試已關閉':'Start test is off',
   '起步槳分析':'start-stroke analysis',
-  '起步槳數據':'start-stroke data'
+  '起步槳數據':'start-stroke data',
+  '起步槳測試':'Start Stroke Test',
+  '起步槳測試模式':'Start Stroke Test Mode',
+  '此模式會在完成設定槳數後自動停止訓練。':'This mode stops automatically when the configured stroke count is completed.'
  },
  "ja":{
   "訓練":"トレーニング","訓練紀錄":"トレーニング履歴","隊員資料庫":"選手データ",
@@ -485,7 +490,10 @@ const I18N={
   '起步測試：分析完成':'スタートテスト：完了',
   '起步測試已關閉':'スタートテスト：オフ',
   '起步槳分析':'スタートストローク分析',
-  '起步槳數據':'スタートストロークデータ'
+  '起步槳數據':'スタートストロークデータ',
+  '起步槳測試':'スタートストロークテスト',
+  '起步槳測試模式':'スタートストロークテストモード',
+  '此模式會在完成設定槳數後自動停止訓練。':'設定したストローク数を完了すると自動的に停止します。'
  },
  "ko":{
   "訓練":"훈련","訓練紀錄":"훈련 기록","隊員資料庫":"선수 데이터",
@@ -587,11 +595,17 @@ const I18N={
   '起步測試：分析完成':'스타트 테스트: 완료',
   '起步測試已關閉':'스타트 테스트: 꺼짐',
   '起步槳分析':'스타트 스트로크 분석',
-  '起步槳數據':'스타트 스트로크 데이터'
+  '起步槳數據':'스타트 스트로크 데이터',
+  '起步槳測試':'스타트 스트로크 테스트',
+  '起步槳測試模式':'스타트 스트로크 테스트 모드',
+  '此模式會在完成設定槳數後自動停止訓練。':'설정한 스트로크 수를 완료하면 자동으로 훈련이 종료됩니다.'
  }
 };
 let currentLang="zh-TW";
 let startStrokeTarget=Number(localStorage.getItem("dragonboatStartStrokeTarget")||20);
+function isStartStrokeMode(){
+ return $("mode") && $("mode").value==="start";
+}
 function updateStartStrokeUi(){
  const n=Math.max(0,Math.min(100,Math.round(Number(startStrokeTarget)||0)));
  const target=$("testStrokeTargetDisplay");
@@ -603,6 +617,8 @@ function updateStartStrokeUi(){
  if($("testAutoStatus")&&!running&&testStrokeCount===0){
    $("testAutoStatus").textContent=n>0?tr("起步測試：等待第一槳…"):tr("起步測試已關閉");
  }
+ const hint=$("startStrokeModeHint");
+ if(hint)hint.textContent=isStartStrokeMode()?tr("此模式會在完成設定槳數後自動停止訓練。"):"";
 }
 
 function detectLanguage(){
@@ -884,7 +900,9 @@ if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr(
 function stopRun(){if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
 function resetAll(){stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步測試：等待第一槳…"):tr("起步測試已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
-function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(startStrokeTarget>0&&testStrokeCount>=startStrokeTarget){testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent=tr("起步測試：分析完成")}}
+function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(startStrokeTarget>0&&testStrokeCount>=startStrokeTarget){
+      const shouldStopForStartMode=isStartStrokeMode();testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent=tr("起步測試：分析完成");
+      if(shouldStopForStartMode&&running)setTimeout(()=>{if(running)stopRun()},150)}}
 function start20(){testActive=startStrokeTarget>0;testStrokeCount=0;testStartTime=0;testEndTime=0;testStartSpeed=smoothSpeed();testStartDistance=totalDistance;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent=testStartSpeed.toFixed(1);$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=startStrokeTarget>0?tr("起步測試：分析中…"):tr("起步測試已關閉");updateStartStrokeUi()}
 async function enableMotion(){try{if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){motionMsg("動作感測權限未允許","bad");return}}window.addEventListener("devicemotion",enhancedStrokeMotion);motionEnabled=true;if($("motionBtn"))$("motionBtn").textContent="動作感測已允許";if($("motionDiagText"))$("motionDiagText").textContent="等待 Motion 資料";motionMsg("AUTO 已啟用；靜止時不計槳","good");$("sensorStatus").textContent="動作感測：AUTO";$("sensorStatus").className="status good"}catch(e){motionMsg("無法啟用動作感測","bad")}}
 function motionMsg(t,c){$("motionStatus").textContent=t;$("motionStatus").className="status "+c}
@@ -1133,7 +1151,8 @@ function saveTeamRecord(){
   team:$("teamName").value.trim()||"未命名隊伍",
   session:$("sessionName").value.trim()||"一般訓練",
   member:selectedMemberSnapshot(),
-  mode:Number($("mode").value),
+  mode:$("mode").value==="start"?"start":Number($("mode").value),
+  testType:isStartStrokeMode()?"startStroke":null,
   time:elapsedBefore,
   distance:totalDistance,
   avgSpeed:(totalDistance/(elapsedBefore/1000))*3.6,
@@ -1215,7 +1234,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.11.1",
+    version:"7.12",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1318,7 +1337,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.11.1"
+ creator="Dragon Boat Speedometer V7.12"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -1392,6 +1411,12 @@ function exportLatestGpx(){
     return;
   }
   exportRecordGpx(idx);
+}
+function modeLabel(mode){
+ if(mode==="start")return tr("起步槳測試");
+ if(mode==="free")return tr("自由訓練");
+ const n=Number(mode);
+ return isFinite(n)&&n>0?`${n}m`:String(mode||"");
 }
 function historyDateKey(iso){
  const d=new Date(iso);
@@ -1580,6 +1605,7 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":
 currentLang=detectLanguage();
 $("languageSelect").value=currentLang;
 $("languageSelect").onchange=()=>setLanguage($("languageSelect").value);
+if($("mode"))$("mode").addEventListener("change",updateStartStrokeUi);
 if($("startStrokeTarget")){
  $("startStrokeTarget").value=startStrokeTarget;
  const syncStartStrokeTarget=()=>{
