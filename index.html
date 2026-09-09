@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.12</title>
+<title>Dragon Boat Speedometer V7.12.1</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -95,10 +95,17 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 .historyDateGroup.open .historyDateBody{display:block}
 
 </style>
+<style>
+@media(max-width:700px){
+ .hero{padding:14px 10px;margin-top:12px}
+ .hero .v{font-size:72px}
+ .hero .u{margin-top:5px}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.12 · 獨立起步槳測試</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.12.1 · 即時數據優先版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -115,7 +122,7 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="appPage active" id="page-training">
 
 
-<div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜即時速度</div></div>
+
 <div class="panel countdown" id="countdown">3</div>
 
 <div class="panel">
@@ -160,6 +167,8 @@ select{background:#292930;color:#fff;margin-bottom:10px}
 <div class="metric"><div class="label">GPS 精度</div><div class="num"><span id="accuracy">--</span> m</div></div>
 </div>
 </div>
+
+<div class="panel hero"><div class="v" id="speed">0.0</div><div class="u">km/h｜即時速度</div></div>
 
 <div class="panel controls">
 <button class="primary" id="startBtn">開始訓練</button>
@@ -1234,7 +1243,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.12",
+    version:"7.12.1",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1337,7 +1346,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.12"
+ creator="Dragon Boat Speedometer V7.12.1"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
