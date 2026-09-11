@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.16.3</title>
+<title>Dragon Boat Speedometer V7.16.5</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -148,7 +148,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.16.3 · GPS 速率防卡版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.16.5 · 最高槳頻版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -316,7 +316,8 @@ body.training-active #liveDashboardPanel{display:block}
 </div>
 <div>
 <div class="label">總槳數</div><div class="num" id="strokeCount">0</div>
-<div class="label" style="margin-top:12px">平均槳頻</div><div class="num"><span id="avgSpm">0</span></div>
+<div class="label" style="margin-top:12px">平均槳頻</div><div class="num"><span id="avgSpm">0</span> SPM</div>
+<div class="label" style="margin-top:12px">最高槳頻</div><div class="num"><span id="maxSpm">0</span> SPM</div>
 <div class="label" style="margin-top:12px">狀態</div><div class="num" style="font-size:20px" id="strokeState">待機</div>
 </div>
 </div>
@@ -435,7 +436,7 @@ const I18N={
   '前 20 槳：等待第一槳…':'First 20 strokes: waiting for first stroke…',
   '前 20 槳：分析中…':'First 20 strokes: analyzing…',
   '前 20 槳：分析完成':'First 20 strokes: complete',
-  '平均槳頻':'Average Stroke Rate',
+  '平均槳頻':'Average Stroke Rate','最高槳頻':'Max Stroke Rate',
   '最高':'Max',
   '平均':'Average',
   '未命名隊伍':'Unnamed Team',
@@ -514,7 +515,7 @@ const I18N={
   '分鐘':'minutes',
   '指定時間會以倒數計時顯示；指定距離會顯示剩餘距離。仍可隨時按「停止訓練」手動結束。':'You can still tap Stop Training at any time, even with an automatic stop condition.',
   '剩餘時間':'Time Remaining',
-  '剩餘距離':'Distance Remaining',
+  '剩餘距離':'Distance Remaining','剩餘槳數':'Strokes Remaining',
   '間歇訓練設定':'Interval Training Setup','工作條件':'Work Target','每組工作量':'Work per Rep',
   '恢復時間':'Recovery Time','組數':'Sets','秒':'sec','划行':'Work','恢復':'Recovery','下一組':'Next Rep',
   '第':'Rep ','組':' sets','模式':'Mode','剩餘':'Remaining',
@@ -554,7 +555,7 @@ const I18N={
   '前 20 槳：等待第一槳…':'最初の20ストローク：1本目待ち…',
   '前 20 槳：分析中…':'最初の20ストローク：分析中…',
   '前 20 槳：分析完成':'最初の20ストローク：分析完了',
-  '平均槳頻':'平均ストロークレート',
+  '平均槳頻':'平均ストロークレート','最高槳頻':'最高ストロークレート',
   '最高':'最高',
   '平均':'平均',
   '未命名隊伍':'無名チーム',
@@ -633,7 +634,7 @@ const I18N={
   '分鐘':'分',
   '指定時間會以倒數計時顯示；指定距離會顯示剩餘距離。仍可隨時按「停止訓練」手動結束。':'自動停止条件を設定していても、いつでも「停止」を押して手動終了できます。',
   '剩餘時間':'残り時間',
-  '剩餘距離':'残り距離',
+  '剩餘距離':'残り距離','剩餘槳數':'残りストローク',
   '間歇訓練設定':'インターバル設定','工作條件':'ワーク条件','每組工作量':'1本のワーク量',
   '恢復時間':'リカバリー時間','組數':'セット数','秒':'秒','划行':'ワーク','恢復':'リカバリー','下一組':'次のセット',
   '第':'第','組':'セット','模式':'モード','剩餘':'残り',
@@ -673,7 +674,7 @@ const I18N={
   '前 20 槳：等待第一槳…':'첫 20스트로크: 첫 스트로크 대기…',
   '前 20 槳：分析中…':'첫 20스트로크: 분석 중…',
   '前 20 槳：分析完成':'첫 20스트로크: 분석 완료',
-  '平均槳頻':'평균 스트로크 레이트',
+  '平均槳頻':'평균 스트로크 레이트','最高槳頻':'최고 스트로크 레이트',
   '最高':'최고',
   '平均':'평균',
   '未命名隊伍':'이름 없는 팀',
@@ -752,7 +753,7 @@ const I18N={
   '分鐘':'분',
   '指定時間會以倒數計時顯示；指定距離會顯示剩餘距離。仍可隨時按「停止訓練」手動結束。':'자동 종료 조건을 설정해도 언제든지 훈련 중지를 눌러 수동 종료할 수 있습니다.',
   '剩餘時間':'남은 시간',
-  '剩餘距離':'남은 거리',
+  '剩餘距離':'남은 거리','剩餘槳數':'남은 스트로크',
   '間歇訓練設定':'인터벌 훈련 설정','工作條件':'운동 조건','每組工作量':'세트당 운동량',
   '恢復時間':'회복 시간','組數':'세트 수','秒':'초','划行':'운동','恢復':'회복','下一組':'다음 세트',
   '第':'','組':'세트','模式':'모드','剩餘':'남음',
@@ -803,6 +804,14 @@ function checkFreeStop(){
  if(v<=0)return;
  if(freeStopType==="distance"&&totalDistance>=v){stopRun();return;}
  if(freeStopType==="time"&&nowElapsed()>=v*60000){stopRun();return;}
+}
+function isFixedDistanceTrainingMode(){
+ if(!$("mode"))return false;
+ const v=Number($("mode").value);
+ return Number.isFinite(v)&&v>0;
+}
+function fixedDistanceTarget(){
+ return isFixedDistanceTrainingMode()?Number($("mode").value):0;
 }
 function isIntervalTrainingMode(){
  return $("mode") && $("mode").value==="interval";
@@ -1003,7 +1012,7 @@ function setLanguage(lang){
 }
 
 let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],runTrack=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null,gpsLastRestartAt=0;
-let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,confidence=0,sensitivity='mid';
+let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,maxSpm=0,confidence=0,sensitivity='mid';
 let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
 function fmtTime(ms){if(!isFinite(ms)||ms<0)return"--:--.-";const t=ms/1000,m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
@@ -1026,32 +1035,62 @@ function smoothSpeed(){
 function haversine(a,b){const R=6371000,l1=a.latitude*Math.PI/180,l2=b.latitude*Math.PI/180,dl=(b.latitude-a.latitude)*Math.PI/180,dn=(b.longitude-a.longitude)*Math.PI/180,x=Math.sin(dl/2)**2+Math.cos(l1)*Math.cos(l2)*Math.sin(dn/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 
 function updateDashboardMirror(){
- const free=isFreeTrainingMode();
- const limit=Math.max(0,Number(freeStopValue)||0);
- const timeCountdown=running&&free&&freeStopType==="time"&&limit>0;
- const distanceCountdown=running&&free&&freeStopType==="distance"&&limit>0;
-
- if($("dashTimeLabel"))$("dashTimeLabel").textContent=timeCountdown?tr("剩餘時間"):tr("時間");
- if($("dashDistanceLabel"))$("dashDistanceLabel").textContent=distanceCountdown?tr("剩餘距離"):tr("距離");
-
- if($("dashTime")){
-   if(timeCountdown){
-     const remain=Math.max(0,limit*60000-nowElapsed());
-     $("dashTime").textContent=fmtTime(remain);
-   }else if($("time")) $("dashTime").textContent=$("time").textContent;
- }
- if($("dashDistance")){
-   if(distanceCountdown){
-     $("dashDistance").textContent=Math.max(0,Math.ceil(limit-totalDistance));
-   }else if($("distance")) $("dashDistance").textContent=$("distance").textContent;
- }
+ const timeEl=$("dashTime"),distEl=$("dashDistance"),timeLabel=$("dashTimeLabel"),distLabel=$("dashDistanceLabel");
+ if(timeEl&&$("time"))timeEl.textContent=$("time").textContent;
+ if(distEl&&$("distance"))distEl.textContent=$("distance").textContent;
  if($("dashAvgSpeed")&&$("avg"))$("dashAvgSpeed").textContent=$("avg").textContent;
  if($("dashMaxSpeed")&&$("max"))$("dashMaxSpeed").textContent=$("max").textContent;
  if($("dashEstimate")&&$("estimate"))$("dashEstimate").textContent=$("estimate").textContent;
  if($("dashAccuracy")&&$("accuracy"))$("dashAccuracy").textContent=$("accuracy").textContent;
+
+ if(timeLabel)timeLabel.textContent=tr("時間");
+ if(distLabel)distLabel.textContent=tr("距離");
+
+ if(!running)return;
+
+ if(isFreeTrainingMode()){
+   const v=Math.max(0,Number(freeStopValue)||0);
+   if(freeStopType==="time"&&v>0){
+     if(timeLabel)timeLabel.textContent=tr("剩餘時間");
+     if(timeEl)timeEl.textContent=fmtTime(Math.max(0,v*60000-nowElapsed()));
+   }else if(freeStopType==="distance"&&v>0){
+     if(distLabel)distLabel.textContent=tr("剩餘距離");
+     if(distEl)distEl.textContent=Math.max(0,Math.ceil(v-totalDistance))+" m";
+   }
+   return;
+ }
+
+ if(isFixedDistanceTrainingMode()){
+   const target=fixedDistanceTarget();
+   if(distLabel)distLabel.textContent=tr("剩餘距離");
+   if(distEl)distEl.textContent=Math.max(0,Math.ceil(target-totalDistance))+" m";
+   return;
+ }
+
+ if(isStartStrokeMode()){
+   const target=Math.max(0,Number(startStrokeTarget)||0);
+   if(distLabel)distLabel.textContent=tr("剩餘槳數");
+   if(distEl)distEl.textContent=target>0?Math.max(0,target-testStrokeCount)+" 槳":"—";
+   return;
+ }
+
+ if(isIntervalTrainingMode()){
+   if(intervalPhase==="work"&&intervalWorkType==="distance"){
+     const target=Math.max(1,Number(intervalWorkValue)||1);
+     if(distLabel)distLabel.textContent=tr("剩餘距離");
+     if(distEl)distEl.textContent=Math.max(0,Math.ceil(target-intervalWorkDistance()))+" m";
+   }else if(intervalPhase==="work"&&intervalWorkType==="time"){
+     const target=Math.max(1,Number(intervalWorkValue)||1);
+     if(timeLabel)timeLabel.textContent=tr("剩餘時間");
+     if(timeEl)timeEl.textContent=fmtTime(Math.max(0,target*1000-intervalPhaseElapsed()));
+   }else if(intervalPhase==="rest"){
+     if(timeLabel)timeLabel.textContent=tr("剩餘時間");
+     if(timeEl)timeEl.textContent=fmtTime(Math.max(0,(Number(intervalRestSeconds)||0)*1000-intervalPhaseElapsed()));
+   }
+ }
 }
 function updateMain(){
- const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
+ const sp=smoothSpeed(),e=nowElapsed(),avg=e>0?(totalDistance/(e/1000))*3.6:0; $("speed").textContent=sp.toFixed(1);$("distance").textContent=Math.round(totalDistance);$("max").textContent=maxSpeed.toFixed(1);$("time").textContent=fmtTime(e);$("avg").textContent=avg.toFixed(1);$("estimate").textContent=avg>0?fmtTime((500/(avg/3.6))*1000):"--:--.-";$("spm").textContent=Math.round(currentSpm);$("avgSpm").textContent=Math.round(averageSpm);if($("maxSpm"))$("maxSpm").textContent=Math.round(maxSpm);$("strokeCount").textContent=totalStrokeCount;$("confidence").textContent=Math.round(confidence);$("confidenceBar").style.width=Math.max(0,Math.min(100,confidence))+"%";
 updateDashboardMirror();checkFreeStop();checkIntervalTraining();updateIntervalLiveStatus();
 if(running){const sec=Math.floor(e/1000);if(sec!==lastSeriesSecond){lastSeriesSecond=sec;runSeries.push({t:e,d:totalDistance,speed:sp,spm:currentSpm});if(runSeries.length>3600)runSeries.shift()}}}
 function startTimerLoop(){clearInterval(timerHandle);timerHandle=setInterval(updateMain,100)} function stopTimerLoop(){clearInterval(timerHandle);timerHandle=null;updateMain()}
@@ -1245,6 +1284,7 @@ function resetStrokeDetectorForNewRun(){
   strokeTimes=[];
   currentSpm=0;
   averageSpm=0;
+  maxSpm=0;
   confidence=0;
   filtered=0;
   prevFiltered=0;
@@ -1255,7 +1295,7 @@ function resetStrokeDetectorForNewRun(){
   calibrationCount=0;
   calibrationSamples=[];
   $("spm").textContent="0";
-  $("avgSpm").textContent="0";
+  $("avgSpm").textContent="0";if($("maxSpm"))$("maxSpm").textContent="0";
   $("confidence").textContent="0";
   $("confidenceBar").style.width="0%";
   $("strokeState").textContent=motionEnabled?"待偵測":"待機";
@@ -1281,8 +1321,8 @@ function stopRun(){
  setTrainingDashboard(false);if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;updateIntervalLiveStatus();stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
 function resetAll(){
  if($("countdown"))$("countdown").style.display="none";
- setTrainingDashboard(false);stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
-function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
+ setTrainingDashboard(false);stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;maxSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
+function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;if(isFinite(currentSpm)&&currentSpm>maxSpm)maxSpm=currentSpm;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(startStrokeTarget>0&&testStrokeCount>=startStrokeTarget){
       const shouldStopForStartMode=isStartStrokeMode();testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent=tr("起步訓練：分析完成");
       if(shouldStopForStartMode&&running)setTimeout(()=>{if(running)stopRun()},150)}}
@@ -1556,6 +1596,7 @@ function saveTeamRecord(){
   avgSpeed:elapsedBefore>0?(totalDistance/(elapsedBefore/1000))*3.6:0,
   maxSpeed:maxSpeed,
   avgSpm:averageSpm,
+  maxSpm:maxSpm,
   strokes:totalStrokeCount,
   startStrokeCount:startStrokeTarget,twentyDistance:startStrokeTarget>0&&testStrokeCount>=startStrokeTarget?Math.max(0,testEndDistance-testStartDistance):null,
   twentyTime:startStrokeTarget>0&&testStrokeCount>=startStrokeTarget&&testEndTime>testStartTime?(testEndTime-testStartTime):null,
@@ -1611,6 +1652,7 @@ function recordToCsvRow(r){
     r.avgSpeed??"",
     r.maxSpeed??"",
     r.avgSpm??r.spm??"",
+    r.maxSpm??"",
     r.totalStrokes??r.strokes??"",
     r.twentyTime??"",
     r.twentySpm??"",
@@ -1622,7 +1664,7 @@ function recordToCsvRow(r){
 function exportAllCsv(){
   const rows=historyRecords();
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
-  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"].map(tr);
+  const header=["日期時間","隊伍","訓練名稱","隊員","模式/目標","距離(m)","時間","平均速度(km/h)","最高速度(km/h)","平均SPM","最高SPM","總槳數","20槳時間","20槳SPM","20槳距離(m)","每槳平均距離(m)","分段成績"].map(tr);
   const csv=[header,...rows.map(recordToCsvRow)].map(row=>row.map(csvEscape).join(",")).join("\n");
   const d=new Date().toISOString().slice(0,10);
   downloadTextFile("dragonboat-training-"+d+".csv",csv,"text/csv;charset=utf-8");
@@ -1632,7 +1674,7 @@ function exportAllJson(){
   if(!rows.length){alert("目前沒有訓練紀錄可以匯出。");return}
   const payload={
     app:"Dragon Boat Speedometer",
-    version:"7.16.3",
+    version:"7.16.5",
     exportedAt:new Date().toISOString(),
     records:rows,
     members:getMembers()
@@ -1735,7 +1777,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.16.3"
+ creator="Dragon Boat Speedometer V7.16.5"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -1843,7 +1885,7 @@ function buildHistoryCard(r,realIndex){
   tr('模式')+' '+escapeHtml(modeLabel(r.mode))+(r.interval?'｜'+Number(r.interval.sets||0)+' '+tr('組'):'')+'<br>'+
   tr('距離')+' '+Number(r.distance||0).toFixed(1)+' m｜'+tr('時間')+' '+fmtTime(Number(r.time||0))+'<br>'+
   tr('平均')+' '+Number(r.avgSpeed||0).toFixed(1)+' km/h｜'+tr('最高')+' '+Number(r.maxSpeed||0).toFixed(1)+' km/h<br>'+
-  tr('平均槳頻')+' '+Math.round(Number(r.avgSpm||0))+' SPM｜'+tr('總槳數')+' '+Math.round(Number(r.strokes||0))+
+  tr('平均槳頻')+' '+Math.round(Number(r.avgSpm||0))+' SPM｜'+tr('最高槳頻')+' '+Math.round(Number(r.maxSpm||0))+' SPM<br>'+tr('總槳數')+' '+Math.round(Number(r.strokes||0))+
   (r.twentyDistance!=null?'<br>'+(r.startStrokeCount||20)+' '+tr('起步槳數')+'｜'+tr('起步距離')+' '+Number(r.twentyDistance).toFixed(1)+' m':'')+
   '</div></span><span class="historyChevron">⌄</span></button>'+
   '<div class="historyDropdown">'+
