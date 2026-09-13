@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.17.1</title>
+<title>Dragon Boat Speedometer V7.17.2</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -156,7 +156,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.17.1 · 簡化聲音設定版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.17.2 · 聲音提醒修正版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -198,6 +198,7 @@ body.training-active #liveDashboardPanel{display:block}
       <div>
         <div class="label">距離聲音提醒</div>
         <div class="tiny" id="soundHint">到達指定距離時發出提示音</div>
+        <button type="button" id="testDistanceSoundBtn" class="smallBtn" style="margin-top:8px">測試聲音</button>
       </div>
       <label class="soundSwitch" aria-label="距離聲音提醒">
         <input id="distanceSoundToggle" type="checkbox">
@@ -1058,30 +1059,45 @@ distanceSoundInterval=Math.max(10,Math.min(5000,Math.round(distanceSoundInterval
 let nextDistanceSound=distanceSoundInterval;
 let audioCtx=null;
 
-function ensureAudioReady(){
-  if(!distanceSoundEnabled)return;
+async function ensureAudioReady(force=false){
+  if(!distanceSoundEnabled&&!force)return false;
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
+    if(!AC)return false;
     if(!audioCtx)audioCtx=new AC();
-    if(audioCtx.state==="suspended")audioCtx.resume();
-  }catch(e){}
+    if(audioCtx.state==="suspended"){
+      try{await audioCtx.resume();}catch(e){}
+    }
+    // iOS Safari unlock: play an almost-silent one-sample buffer from a user gesture.
+    if(audioCtx.state==="running"&&!audioCtx._dbUnlocked){
+      try{
+        const b=audioCtx.createBuffer(1,1,22050);
+        const s=audioCtx.createBufferSource();
+        s.buffer=b;s.connect(audioCtx.destination);s.start(0);
+        audioCtx._dbUnlocked=true;
+      }catch(e){}
+    }
+    return audioCtx.state==="running";
+  }catch(e){return false}
 }
-function playDistanceBeep(){
-  if(!distanceSoundEnabled)return;
+async function playDistanceBeep(force=false){
+  if(!distanceSoundEnabled&&!force)return;
   try{
-    ensureAudioReady();
-    if(!audioCtx)return;
-    const now=audioCtx.currentTime;
-    const osc=audioCtx.createOscillator();
-    const gain=audioCtx.createGain();
-    osc.type="sine";
-    osc.frequency.setValueAtTime(880,now);
-    gain.gain.setValueAtTime(0.0001,now);
-    gain.gain.exponentialRampToValueAtTime(0.28,now+0.015);
-    gain.gain.exponentialRampToValueAtTime(0.0001,now+0.22);
-    osc.connect(gain);gain.connect(audioCtx.destination);
-    osc.start(now);osc.stop(now+0.24);
+    const ready=await ensureAudioReady(force);
+    if(!ready||!audioCtx)return;
+    const now=audioCtx.currentTime+0.02;
+    // Two short, louder tones are easier to hear on water than one soft tone.
+    [[0,0.20,1050],[0.27,0.20,1250]].forEach(([delay,dur,freq])=>{
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.type="square";
+      osc.frequency.setValueAtTime(freq,now+delay);
+      gain.gain.setValueAtTime(0.0001,now+delay);
+      gain.gain.exponentialRampToValueAtTime(0.72,now+delay+0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001,now+delay+dur);
+      osc.connect(gain);gain.connect(audioCtx.destination);
+      osc.start(now+delay);osc.stop(now+delay+dur+0.03);
+    });
   }catch(e){}
 }
 function resetDistanceSoundCue(){
@@ -1857,7 +1873,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.17.1"
+ creator="Dragon Boat Speedometer V7.17.2"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -2229,7 +2245,7 @@ if($("distanceSoundToggle")){
   $("distanceSoundToggle").onchange=()=>{
     distanceSoundEnabled=$("distanceSoundToggle").checked;
     localStorage.setItem("dragonboatDistanceSoundEnabled",distanceSoundEnabled?"1":"0");
-    if(distanceSoundEnabled)ensureAudioReady();
+    if(distanceSoundEnabled)ensureAudioReady(true);
     resetDistanceSoundCue();
   };
 }
@@ -2246,12 +2262,18 @@ if($("distanceSoundInterval")){
   $("distanceSoundInterval").onchange=applySoundDistance;
   $("distanceSoundInterval").onblur=applySoundDistance;
 }
+if($("testDistanceSoundBtn")){
+  $("testDistanceSoundBtn").onclick=async()=>{
+    await ensureAudioReady(true);
+    await playDistanceBeep(true);
+  };
+}
 
 $("showAllHistoryBtn").onclick=()=>{showAllHistory=!showAllHistory;renderHistory()};
 $("clearHistoryBtn").onclick=clearAllHistory;
 $("startBtn").onclick=async()=>{
 if(running){stopRun();return}
-ensureAudioReady();
+if(distanceSoundEnabled)await ensureAudioReady(true);
 $("startBtn").disabled=true;
 const oldText=$("startBtn").textContent;
 try{
