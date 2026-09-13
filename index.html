@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.16.7</title>
+<title>Dragon Boat Speedometer V7.17.0</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -16,6 +16,14 @@ body{margin:0;background:#0a0a0c;color:#fff;min-height:100vh}
 .title{font-weight:900;letter-spacing:.05em}
 .ver{color:#8f8f98;font-size:12px}
 .panel{background:#16161a;border:1px solid #292930;border-radius:18px;padding:14px;margin-bottom:12px}
+.soundRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.soundSwitch{position:relative;display:inline-block;width:54px;height:32px;flex:none}
+.soundSwitch input{opacity:0;width:0;height:0}
+.soundSlider{position:absolute;inset:0;background:#38383f;border-radius:999px;transition:.2s}
+.soundSlider:before{content:"";position:absolute;width:26px;height:26px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.soundSwitch input:checked + .soundSlider{background:#2f8cff}
+.soundSwitch input:checked + .soundSlider:before{transform:translateX(22px)}
+
 .hero{text-align:center;padding:18px 10px}
 .hero .v{font-size:84px;line-height:.9;font-weight:900;font-variant-numeric:tabular-nums}
 .hero .u{margin-top:8px;color:#aaa}
@@ -148,7 +156,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.16.7 · 起步最高槳頻優化版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.17.0 · 自訂聲音距離版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -183,6 +191,35 @@ body.training-active #liveDashboardPanel{display:block}
   </select>
 </div>
 </div>
+
+<div class="grid" style="margin-bottom:10px">
+  <div class="metric">
+    <div class="soundRow">
+      <div>
+        <div class="label">距離聲音提醒</div>
+        <div class="tiny" id="soundHint">到達指定距離時發出提示音</div>
+      </div>
+      <label class="soundSwitch" aria-label="距離聲音提醒">
+        <input id="distanceSoundToggle" type="checkbox">
+        <span class="soundSlider"></span>
+      </label>
+    </div>
+  </div>
+  <div class="metric">
+    <div class="label">提醒距離</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+      <input id="distanceSoundInterval" type="number" min="10" max="5000" step="10" inputmode="numeric" value="100" style="width:100%">
+      <span class="unit">m</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <button type="button" class="smallBtn soundPreset" data-distance="50">50m</button>
+      <button type="button" class="smallBtn soundPreset" data-distance="100">100m</button>
+      <button type="button" class="smallBtn soundPreset" data-distance="200">200m</button>
+      <button type="button" class="smallBtn soundPreset" data-distance="250">250m</button>
+    </div>
+  </div>
+</div>
+
 <div class="grid" style="margin-bottom:10px">
 <div class="metric"><div class="label">隊伍／組合</div><input id="teamName" value="黃金沒力號" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
 <div class="metric"><div class="label">訓練標籤</div><input id="sessionName" placeholder="例如：比賽配置 A" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
@@ -1010,7 +1047,7 @@ function setLanguage(lang){
  translateStaticUI();
 }
 
-let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],runTrack=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null,gpsLastRestartAt=0;
+let watchId=null,running=false,startedAt=0,elapsedBefore=0,lastPos=null,totalDistance=0,speedSamples=[],stableSpeedPeakSamples=[],maxSpeed=0,splits=[],nextSplit=100,timerHandle=null,wakeLock=null,runSeries=[],runTrack=[],lastSeriesSecond=-1,gpsReady=false,gpsLastFixAt=0,gpsPending=null,gpsLastRestartAt=0;
 let motionEnabled=false,calibrating=false,calibrationCount=0,calibrationSamples=[],axis='x',axisScore={x:0,y:0,z:0},prevAxisVal=0,filtered=0,prevFiltered=0,noiseWindow=[],peakWindow=[],lastPeakTime=0,lastStrokeTime=0,strokeTimes=[],totalStrokeCount=0,currentSpm=0,averageSpm=0,maxSpm=0,confidence=0,sensitivity='mid';
 let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSpeed=0,testEndSpeed=0,testStartDistance=0,testEndDistance=0;
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
@@ -1020,6 +1057,50 @@ function updateClock(){$("clock").textContent=new Date().toLocaleTimeString("zh-
 function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
 function mad(a){if(a.length<3)return 0;const m=median(a);return median(a.map(v=>Math.abs(v-m)))}
 let speedResponseMode=localStorage.getItem("dragonboatSpeedResponse")||"fast";
+let distanceSoundEnabled=localStorage.getItem("dragonboatDistanceSoundEnabled")==="1";
+let distanceSoundInterval=Number(localStorage.getItem("dragonboatDistanceSoundInterval")||100);
+if(!Number.isFinite(distanceSoundInterval))distanceSoundInterval=100;
+distanceSoundInterval=Math.max(10,Math.min(5000,Math.round(distanceSoundInterval)));
+let nextDistanceSound=distanceSoundInterval;
+let audioCtx=null;
+
+function ensureAudioReady(){
+  if(!distanceSoundEnabled)return;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    if(!audioCtx)audioCtx=new AC();
+    if(audioCtx.state==="suspended")audioCtx.resume();
+  }catch(e){}
+}
+function playDistanceBeep(){
+  if(!distanceSoundEnabled)return;
+  try{
+    ensureAudioReady();
+    if(!audioCtx)return;
+    const now=audioCtx.currentTime;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type="sine";
+    osc.frequency.setValueAtTime(880,now);
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.exponentialRampToValueAtTime(0.28,now+0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001,now+0.22);
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    osc.start(now);osc.stop(now+0.24);
+  }catch(e){}
+}
+function resetDistanceSoundCue(){
+  nextDistanceSound=distanceSoundInterval;
+}
+function checkDistanceSound(){
+  if(!running||!distanceSoundEnabled)return;
+  while(totalDistance>=nextDistanceSound){
+    playDistanceBeep();
+    nextDistanceSound+=distanceSoundInterval;
+  }
+}
+
 function smoothSpeed(){
   if(!speedSamples.length)return 0;
   const latest=speedSamples[speedSamples.length-1]||0;
@@ -1121,7 +1202,7 @@ function onPosition(pos){
       const cs=dist/dt*3.6;
       if((!gpsSpeed||gpsSpeed<0.5)&&cs<35)gpsSpeed=cs;
       if(running&&acc<=30&&dist<40){
-        totalDistance+=dist;checkSplits();checkTarget();checkFreeStop();
+        totalDistance+=dist;checkSplits();checkDistanceSound();checkTarget();checkFreeStop();
       }
     }
   }
@@ -1147,7 +1228,9 @@ function onPosition(pos){
     speedSamples.push(gpsSpeed);
     if(speedSamples.length>20)speedSamples.shift();
     const sm=smoothSpeed();
-    if(sm>maxSpeed)maxSpeed=sm;
+    stableSpeedPeakSamples.push({t:Date.now(),v:sm});
+    stableSpeedPeakSamples=stableSpeedPeakSamples.filter(x=>Date.now()-x.t<=2000);
+    if(stableSpeedPeakSamples.length>=2){const pv=stableSpeedPeakSamples.map(x=>x.v).sort((a,b)=>a-b);const stablePeak=pv[Math.floor(pv.length/2)];if(stablePeak>maxSpeed)maxSpeed=stablePeak;}
   }
   updateMain();
 }
@@ -1284,6 +1367,7 @@ function resetStrokeDetectorForNewRun(){
   currentSpm=0;
   averageSpm=0;
   maxSpm=0;
+  stableSpmPeakSamples=[];
   confidence=0;
   filtered=0;
   prevFiltered=0;
@@ -1308,7 +1392,7 @@ function resetStrokeDetectorForNewRun(){
 function startRun(){
  setTrainingDashboard(true);
 resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent=tr("GPX 軌跡點：")+"0";lastSeriesSecond=-1;
-running=true;startedAt=performance.now();lastPos=null;
+running=true;startedAt=performance.now();lastPos=null;resetDistanceSoundCue();
 resetIntervalRuntime();
 $("startBtn").textContent="停止訓練";$("startBtn").className="danger";
 startTimerLoop();requestWakeLock();
@@ -1320,12 +1404,12 @@ function stopRun(){
  setTrainingDashboard(false);if(!running)return;elapsedBefore=nowElapsed();running=false;testActive=false;updateIntervalLiveStatus();stopTimerLoop();$("startBtn").textContent="開始訓練";$("startBtn").className="primary";releaseWakeLock();saveTeamRecord()}
 function resetAll(){
  if($("countdown"))$("countdown").style.display="none";
- setTrainingDashboard(false);stopRun();resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;maxSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
+ setTrainingDashboard(false);stopRun();resetStrokeDetectorForNewRun();resetDistanceSoundCue();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];stableSpeedPeakSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;maxSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
 function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));
 const startPeakMode=isStartStrokeMode();
 const maxSpmEnoughIntervals=startPeakMode?ints.length>=2:ints.length>=3;
 const maxSpmEnoughConfidence=startPeakMode?confidence>=50:confidence>=70;
-if(maxSpmEnoughIntervals&&maxSpmEnoughConfidence&&currentSpm>=35&&currentSpm<=140&&currentSpm>maxSpm)maxSpm=currentSpm;$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
+if(maxSpmEnoughIntervals&&maxSpmEnoughConfidence&&currentSpm>=35&&currentSpm<=140){stableSpmPeakSamples.push(currentSpm);const keep=startPeakMode?3:5;if(stableSpmPeakSamples.length>keep)stableSpmPeakSamples.shift();const need=startPeakMode?2:3;if(stableSpmPeakSamples.length>=need){const pv=stableSpmPeakSamples.slice().sort((a,b)=>a-b);const stablePeakSpm=pv[Math.floor(pv.length/2)];if(stablePeakSpm>maxSpm)maxSpm=stablePeakSpm;}}$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(startStrokeTarget>0&&testStrokeCount>=startStrokeTarget){
       const shouldStopForStartMode=isStartStrokeMode();testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent=tr("起步訓練：分析完成");
       if(shouldStopForStartMode&&running)setTimeout(()=>{if(running)stopRun()},150)}}
@@ -1779,7 +1863,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.16.7"
+ creator="Dragon Boat Speedometer V7.17.0"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -2146,18 +2230,47 @@ $("speedResponse").onchange=()=>{
   localStorage.setItem("dragonboatSpeedResponse",speedResponseMode);
   updateMain();
 };
+if($("distanceSoundToggle")){
+  $("distanceSoundToggle").checked=distanceSoundEnabled;
+  $("distanceSoundToggle").onchange=()=>{
+    distanceSoundEnabled=$("distanceSoundToggle").checked;
+    localStorage.setItem("dragonboatDistanceSoundEnabled",distanceSoundEnabled?"1":"0");
+    if(distanceSoundEnabled)ensureAudioReady();
+    resetDistanceSoundCue();
+  };
+}
+if($("distanceSoundInterval")){
+  $("distanceSoundInterval").value=String(distanceSoundInterval);
+  const applySoundDistance=()=>{
+    let v=Math.round(Number($("distanceSoundInterval").value)||100);
+    v=Math.max(10,Math.min(5000,v));
+    distanceSoundInterval=v;
+    $("distanceSoundInterval").value=String(v);
+    localStorage.setItem("dragonboatDistanceSoundInterval",String(distanceSoundInterval));
+    resetDistanceSoundCue();
+  };
+  $("distanceSoundInterval").onchange=applySoundDistance;
+  $("distanceSoundInterval").onblur=applySoundDistance;
+  document.querySelectorAll(".soundPreset").forEach(btn=>{
+    btn.onclick=()=>{
+      $("distanceSoundInterval").value=btn.dataset.distance;
+      applySoundDistance();
+    };
+  });
+}
 
 $("showAllHistoryBtn").onclick=()=>{showAllHistory=!showAllHistory;renderHistory()};
 $("clearHistoryBtn").onclick=clearAllHistory;
 $("startBtn").onclick=async()=>{
 if(running){stopRun();return}
+ensureAudioReady();
 $("startBtn").disabled=true;
 const oldText=$("startBtn").textContent;
 try{
   if(!motionEnabled) await enableMotion();
   $("startBtn").textContent="GPS 定位中…";
   await ensureGpsReady();
-  gpsLastRestartAt=0;lastPos=null;speedSamples=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent=tr("GPX 軌跡點：")+"0";resetV69StrokeDetector();
+  gpsLastRestartAt=0;lastPos=null;speedSamples=[];stableSpeedPeakSamples=[];stableSpmPeakSamples=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent=tr("GPX 軌跡點：")+"0";resetV69StrokeDetector();
   $("startBtn").textContent="3 秒後開始";
   await countdownStart();
 }catch(e){
