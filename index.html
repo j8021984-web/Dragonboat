@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.18.3</title>
+<title>Dragon Boat Speedometer V7.18.4</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -346,7 +346,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.18.3 · 聲音介面精準修正版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.18.4 · 多語系完整修正版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -1049,6 +1049,9 @@ const I18N={
   '指定時間會以倒數計時顯示；指定距離會顯示剩餘距離。仍可隨時按「停止訓練」手動結束。':'시간 지정은 카운트다운, 거리 지정은 남은 거리를 표시합니다. 언제든지 수동 종료할 수 있습니다.'
  }
 };
+Object.assign(I18N["en"],{"開始一趟訓練":"Start a Training Session","先選訓練模式；其他資料需要時再展開設定。":"Choose a training mode first; expand other settings only when needed.","本次訓練資料":"Session Details","隊伍／組合":"Team / Crew","隊員與速度設定":"Athlete & Speed Settings","🔊 聲音提醒":"🔊 Sound Alerts","設定":"Settings","📍 距離聲音提醒":"📍 Distance Sound Alert","設定距離提醒，訓練時自動發出提示音":"Set a distance alert to play a sound automatically during training.","提醒距離":"Alert Distance","▶ 測試聲音":"▶ Test Sound","訓練時將依設定的距離自動發出提示音":"A sound will play automatically at the configured distance during training.","（例如：每 100 公尺）":"(Example: every 100 m)","🔁 提醒方式":"🔁 Alert Mode","每 X 公尺提醒一次":"Alert every X meters","只在 X 公尺提醒一次":"Alert once at X meters","🔊 提示音量":"🔊 Alert Volume","手機媒體音量也會影響":"Phone media volume also affects playback.","🎵 提示音來源":"🎵 Alert Sound","內建嗶聲":"Built-in Beep","自訂音檔":"Custom Audio","📁 選擇音檔":"📁 Choose Audio","尚未選擇自訂音檔":"No custom audio selected","恢復內建嗶聲":"Restore Built-in Beep","每組工作完成後自動進入恢復倒數；最後一組完成後自動停止並保存。恢復期間 GPS、速度與槳頻仍持續記錄。":"After each work interval, recovery starts automatically. The final set stops and saves automatically. GPS, speed, and stroke rate continue recording during recovery.","km/h｜即時速度":"km/h | Live Speed","第 1 / 5 組｜划行":"Set 1 / 5 | Work","剩餘 01:00.0":"Remaining 01:00.0","重設／下一趟":"Reset / Next Run","%｜主軸：":"% | Main axis: ","感測器訊號／靜止判斷":"Sensor Signal / Stillness Detection","｜ 訊號：":" | Signal: ","槳頻設定／重新校正":"Stroke Rate Setup / Recalibrate","進階校正 10 槳":"Advanced 10-Stroke Calibration","低":"Low","中":"Medium","高":"High","最高槳頻":"Max Stroke Rate","請固定手機。一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與起步槳分析。":"Secure the phone. Starting training activates GPS, timer, automatic stroke rate, total strokes, 100 m splits, and start-stroke analysis.","尚無分段紀錄":"No split records","GPX 軌跡點：0":"GPX Track Points: 0","動作感測：未啟用":"Motion sensing: Off","重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。":"After reset, stroke detection is re-armed automatically; you do not need to enable motion sensing again.","建議 GPS 精度進入 ±15m 以內再開始正式訓練。":"For formal training, wait until GPS accuracy is within ±15 m.","刪除全部紀錄":"Delete All Records","更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。":"Export JSON before updating. New versions can import and merge it with existing records. Backups from V7.6 onward also retain GPS tracks.","隊員資料儲存在本機，也會一起包含在 V7.9 的 JSON 完整備份中。":"Athlete data is stored on this device and is included in the full JSON backup.","開":"On","關":"Off","一次":"once","每 ":"Every ","自訂音":"Custom","嗶聲":"Beep","音檔請控制在 8MB 以內":"Please keep the audio file under 8 MB.","自訂音檔儲存失敗，請換一個較短的音檔再試一次":"Could not save the custom audio. Try a shorter audio file.","GPS 未知錯誤":"Unknown GPS error","定位權限被拒絕":"Location permission denied","目前無法取得位置":"Location unavailable","GPS 定位逾時":"GPS timed out","GPS 錯誤：":"GPS error: ","未知":"Unknown","GPS 狀態良好":"GPS signal good","GPS 已定位":"GPS located","GPS 已定位，但精度較差":"GPS located, but accuracy is poor","停止訓練":"Stop Training","待偵測":"Waiting","AUTO 已就緒":"AUTO ready","動作感測：AUTO":"Motion sensing: AUTO","可用":"Available","不穩定":"Unstable","動作感測權限未允許":"Motion permission not granted","動作感測已允許":"Motion sensing enabled","等待 Motion 資料":"Waiting for motion data","AUTO 已啟用；靜止時不計槳":"AUTO enabled; strokes are ignored while still","無法啟用動作感測":"Unable to enable motion sensing","請先啟用自動槳頻":"Enable automatic stroke rate first","校正中 0/10":"Calibrating 0/10","學習中":"Learning","校正完成，AUTO 偵測中":"Calibration complete; AUTO detecting","待穩定":"Waiting for stable signal","偵測到動作":"Movement detected","靜止／雜訊已忽略":"Stillness / noise ignored","學習節奏":"Learning rhythm","3 秒後開始":"Starts in 3 seconds","沒有收到 Motion 資料":"No motion data received","GPS 訊號暫時中斷，持續重新定位中":"GPS signal temporarily lost; continuing to reacquire","等待槳動":"Waiting for stroke"});
+Object.assign(I18N["ja"],{"開始一趟訓練":"トレーニングを開始","先選訓練模式；其他資料需要時再展開設定。":"まずトレーニングモードを選び、必要な設定だけ展開してください。","本次訓練資料":"今回のトレーニング情報","隊伍／組合":"チーム／クルー","隊員與速度設定":"選手・速度設定","🔊 聲音提醒":"🔊 サウンド通知","設定":"設定","📍 距離聲音提醒":"📍 距離サウンド通知","設定距離提醒，訓練時自動發出提示音":"距離を設定すると、トレーニング中に自動で通知音が鳴ります。","提醒距離":"通知距離","▶ 測試聲音":"▶ 音をテスト","訓練時將依設定的距離自動發出提示音":"設定した距離に応じてトレーニング中に自動で通知音を鳴らします。","（例如：每 100 公尺）":"（例：100mごと）","🔁 提醒方式":"🔁 通知方法","每 X 公尺提醒一次":"X mごとに通知","只在 X 公尺提醒一次":"X mで1回だけ通知","🔊 提示音量":"🔊 通知音量","手機媒體音量也會影響":"端末のメディア音量にも影響されます。","🎵 提示音來源":"🎵 通知音","內建嗶聲":"内蔵ビープ","自訂音檔":"カスタム音声","📁 選擇音檔":"📁 音声を選択","尚未選擇自訂音檔":"カスタム音声未選択","恢復內建嗶聲":"内蔵ビープに戻す","每組工作完成後自動進入恢復倒數；最後一組完成後自動停止並保存。恢復期間 GPS、速度與槳頻仍持續記錄。":"各ワーク終了後に自動でリカバリーへ移行します。最終セット終了後は自動停止・保存します。リカバリー中もGPS、速度、ストロークレートを記録します。","km/h｜即時速度":"km/h｜リアルタイム速度","第 1 / 5 組｜划行":"第1 / 5セット｜ワーク","剩餘 01:00.0":"残り 01:00.0","重設／下一趟":"リセット／次の走行","%｜主軸：":"%｜主軸：","感測器訊號／靜止判斷":"センサー信号／静止判定","｜ 訊號：":"｜信号：","槳頻設定／重新校正":"ストロークレート設定／再校正","進階校正 10 槳":"10ストローク詳細校正","低":"低","中":"中","高":"高","最高槳頻":"最高ストロークレート","請固定手機。一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與起步槳分析。":"スマートフォンを固定してください。開始するとGPS、計時、自動ストロークレート、総ストローク数、100mスプリット、スタートストローク分析を同時に開始します。","尚無分段紀錄":"スプリット記録なし","GPX 軌跡點：0":"GPXポイント：0","動作感測：未啟用":"モーションセンサー：オフ","重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。":"リセット後はストローク検出が自動的に再開され、モーションセンサーを再許可する必要はありません。","建議 GPS 精度進入 ±15m 以內再開始正式訓練。":"正式なトレーニングはGPS精度が±15m以内になってから開始することを推奨します。","刪除全部紀錄":"全記録を削除","更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。":"更新前にJSONをエクスポートしてください。新バージョンでは既存記録と結合してインポートできます。V7.6以降のバックアップにはGPS軌跡も保存されます。","隊員資料儲存在本機，也會一起包含在 V7.9 的 JSON 完整備份中。":"選手データは端末に保存され、完全JSONバックアップにも含まれます。","開":"オン","關":"オフ","一次":"1回","每 ":"毎 ","自訂音":"カスタム","嗶聲":"ビープ","音檔請控制在 8MB 以內":"音声ファイルは8MB以内にしてください。","自訂音檔儲存失敗，請換一個較短的音檔再試一次":"カスタム音声を保存できませんでした。短い音声で再試行してください。","GPS 未知錯誤":"GPS不明エラー","定位權限被拒絕":"位置情報の権限が拒否されました","目前無法取得位置":"現在位置を取得できません","GPS 定位逾時":"GPS測位がタイムアウトしました","GPS 錯誤：":"GPSエラー：","未知":"不明","GPS 狀態良好":"GPS状態良好","GPS 已定位":"GPS測位完了","GPS 已定位，但精度較差":"GPS測位済み（精度低）","停止訓練":"トレーニング停止","待偵測":"検出待ち","AUTO 已就緒":"AUTO準備完了","動作感測：AUTO":"モーションセンサー：AUTO","可用":"利用可能","不穩定":"不安定","動作感測權限未允許":"モーションセンサー権限が未許可","動作感測已允許":"モーションセンサー有効","等待 Motion 資料":"モーションデータ待ち","AUTO 已啟用；靜止時不計槳":"AUTO有効。静止中はストロークをカウントしません","無法啟用動作感測":"モーションセンサーを有効にできません","請先啟用自動槳頻":"先に自動ストロークレートを有効にしてください","校正中 0/10":"校正中 0/10","學習中":"学習中","校正完成，AUTO 偵測中":"校正完了、AUTO検出中","待穩定":"安定待ち","偵測到動作":"動作を検出","靜止／雜訊已忽略":"静止／ノイズを除外","學習節奏":"リズム学習中","3 秒後開始":"3秒後に開始","沒有收到 Motion 資料":"モーションデータを受信していません","GPS 訊號暫時中斷，持續重新定位中":"GPS信号が一時的に途切れました。再測位を継続中","等待槳動":"ストローク待ち"});
+Object.assign(I18N["ko"],{"開始一趟訓練":"훈련 시작","先選訓練模式；其他資料需要時再展開設定。":"먼저 훈련 모드를 선택하고 필요한 설정만 펼치세요.","本次訓練資料":"이번 훈련 정보","隊伍／組合":"팀 / 크루","隊員與速度設定":"선수 및 속도 설정","🔊 聲音提醒":"🔊 소리 알림","設定":"설정","📍 距離聲音提醒":"📍 거리 소리 알림","設定距離提醒，訓練時自動發出提示音":"거리를 설정하면 훈련 중 자동으로 알림음이 재생됩니다.","提醒距離":"알림 거리","▶ 測試聲音":"▶ 소리 테스트","訓練時將依設定的距離自動發出提示音":"설정한 거리에 따라 훈련 중 자동으로 알림음이 재생됩니다.","（例如：每 100 公尺）":"(예: 100m마다)","🔁 提醒方式":"🔁 알림 방식","每 X 公尺提醒一次":"X m마다 알림","只在 X 公尺提醒一次":"X m에서 한 번만 알림","🔊 提示音量":"🔊 알림 음량","手機媒體音量也會影響":"휴대폰 미디어 음량도 영향을 줍니다.","🎵 提示音來源":"🎵 알림음","內建嗶聲":"기본 비프음","自訂音檔":"사용자 음원","📁 選擇音檔":"📁 음원 선택","尚未選擇自訂音檔":"사용자 음원 미선택","恢復內建嗶聲":"기본 비프음 복원","每組工作完成後自動進入恢復倒數；最後一組完成後自動停止並保存。恢復期間 GPS、速度與槳頻仍持續記錄。":"각 작업 세트가 끝나면 자동으로 회복 카운트다운이 시작됩니다. 마지막 세트가 끝나면 자동으로 정지하고 저장합니다. 회복 중에도 GPS, 속도, 스트로크 레이트를 계속 기록합니다.","km/h｜即時速度":"km/h｜실시간 속도","第 1 / 5 組｜划行":"1 / 5세트｜운동","剩餘 01:00.0":"남음 01:00.0","重設／下一趟":"초기화／다음 훈련","%｜主軸：":"%｜주축: ","感測器訊號／靜止判斷":"센서 신호／정지 판정","｜ 訊號：":"｜신호: ","槳頻設定／重新校正":"스트로크 레이트 설정／재보정","進階校正 10 槳":"10스트로크 고급 보정","低":"낮음","中":"중간","高":"높음","最高槳頻":"최고 스트로크 레이트","請固定手機。一鍵開始後會同步啟動 GPS、計時、自動槳頻、總槳數、100m 分段與起步槳分析。":"휴대폰을 고정하세요. 훈련 시작 시 GPS, 타이머, 자동 스트로크 레이트, 총 스트로크, 100m 구간, 스타트 스트로크 분석이 함께 시작됩니다.","尚無分段紀錄":"구간 기록 없음","GPX 軌跡點：0":"GPX 트랙 포인트: 0","動作感測：未啟用":"모션 센서: 꺼짐","重設後會自動重新武裝槳頻偵測，不需要再次按「允許動作感測」。":"초기화 후 스트로크 감지가 자동으로 다시 준비되므로 모션 센서를 다시 허용할 필요가 없습니다.","建議 GPS 精度進入 ±15m 以內再開始正式訓練。":"정식 훈련은 GPS 정확도가 ±15m 이내일 때 시작하는 것을 권장합니다.","刪除全部紀錄":"모든 기록 삭제","更新版本前先匯出 JSON；新版可直接匯入並與現有紀錄合併。V7.6 之後的備份也會保留 GPS 軌跡。":"업데이트 전에 JSON을 내보내세요. 새 버전에서는 기존 기록과 병합해 가져올 수 있습니다. V7.6 이후 백업에는 GPS 트랙도 포함됩니다.","隊員資料儲存在本機，也會一起包含在 V7.9 的 JSON 完整備份中。":"선수 데이터는 기기에 저장되며 전체 JSON 백업에도 포함됩니다.","開":"켜짐","關":"꺼짐","一次":"한 번","每 ":"매 ","自訂音":"사용자 음원","嗶聲":"비프음","音檔請控制在 8MB 以內":"음원 파일은 8MB 이하로 해주세요.","自訂音檔儲存失敗，請換一個較短的音檔再試一次":"사용자 음원을 저장하지 못했습니다. 더 짧은 음원으로 다시 시도하세요.","GPS 未知錯誤":"알 수 없는 GPS 오류","定位權限被拒絕":"위치 권한이 거부됨","目前無法取得位置":"현재 위치를 가져올 수 없음","GPS 定位逾時":"GPS 위치 확인 시간 초과","GPS 錯誤：":"GPS 오류: ","未知":"알 수 없음","GPS 狀態良好":"GPS 상태 양호","GPS 已定位":"GPS 위치 확인됨","GPS 已定位，但精度較差":"GPS 위치 확인됨, 정확도 낮음","停止訓練":"훈련 중지","待偵測":"감지 대기","AUTO 已就緒":"AUTO 준비됨","動作感測：AUTO":"모션 센서: AUTO","可用":"사용 가능","不穩定":"불안정","動作感測權限未允許":"모션 센서 권한이 허용되지 않음","動作感測已允許":"모션 센서 활성화됨","等待 Motion 資料":"모션 데이터 대기","AUTO 已啟用；靜止時不計槳":"AUTO 활성화; 정지 상태에서는 스트로크를 세지 않음","無法啟用動作感測":"모션 센서를 활성화할 수 없음","請先啟用自動槳頻":"먼저 자동 스트로크 레이트를 활성화하세요","校正中 0/10":"보정 중 0/10","學習中":"학습 중","校正完成，AUTO 偵測中":"보정 완료, AUTO 감지 중","待穩定":"안정화 대기","偵測到動作":"움직임 감지","靜止／雜訊已忽略":"정지／노이즈 무시","學習節奏":"리듬 학습 중","3 秒後開始":"3초 후 시작","沒有收到 Motion 資料":"모션 데이터를 받지 못함","GPS 訊號暫時中斷，持續重新定位中":"GPS 신호가 일시적으로 끊김, 계속 재확인 중","等待槳動":"스트로크 대기"});
 let currentLang="zh-TW";
 let startStrokeTarget=Number(localStorage.getItem("dragonboatStartStrokeTarget")||20);
 function setTrainingDashboard(active){
@@ -1291,6 +1294,10 @@ function translateStaticUI(){
  translateTextNodes($("teamHistory"));
  updateStartStrokeUi();
  updateFreeStopUi();
+ updateIntervalUi();
+ updateIntervalLiveStatus();
+ updateSoundSettingsSummary();
+ renderSplits();
 }
 
 function setLanguage(lang){
@@ -1305,7 +1312,7 @@ let testActive=false,testStartTime=0,testEndTime=0,testStrokeCount=0,testStartSp
 const sensCfg={low:{mult:2.2,minGap:500},mid:{mult:1.8,minGap:430},high:{mult:1.45,minGap:360}};
 function fmtTime(ms){if(!isFinite(ms)||ms<0)return"--:--.-";const t=ms/1000,m=Math.floor(t/60),s=t-m*60;return String(m).padStart(2,"0")+":"+s.toFixed(1).padStart(4,"0")}
 function nowElapsed(){return running?elapsedBefore+(performance.now()-startedAt):elapsedBefore}
-function updateClock(){$("clock").textContent=new Date().toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}setInterval(updateClock,1000);updateClock();
+function updateClock(){$("clock").textContent=new Date().toLocaleTimeString(currentLocale(),{hour:"2-digit",minute:"2-digit",second:"2-digit"})}setInterval(updateClock,1000);updateClock();
 function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y),m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2}
 function mad(a){if(a.length<3)return 0;const m=median(a);return median(a.map(v=>Math.abs(v-m)))}
 let speedResponseMode=localStorage.getItem("dragonboatSpeedResponse")||"fast";
@@ -1549,17 +1556,17 @@ function gpsStatus(t,c="warn"){
   if(el){el.textContent=t;el.className="status "+c}
 }
 function gpsErrorText(e){
-  if(!e)return "GPS 未知錯誤";
-  if(e.code===1)return "定位權限被拒絕";
-  if(e.code===2)return "目前無法取得位置";
-  if(e.code===3)return "GPS 定位逾時";
-  return "GPS 錯誤："+(e.message||"未知");
+  if(!e)return tr("GPS 未知錯誤");
+  if(e.code===1)return tr("定位權限被拒絕");
+  if(e.code===2)return tr("目前無法取得位置");
+  if(e.code===3)return tr("GPS 定位逾時");
+  return tr("GPS 錯誤：")+(e.message||tr("未知"));
 }
 function onPosition(pos){
   const c=pos.coords,acc=isFinite(c.accuracy)?c.accuracy:999;
   gpsReady=true;gpsLastFixAt=Date.now();
   $("accuracy").textContent=Math.round(acc);
-  gpsStatus(acc<=8?"GPS 狀態良好":acc<=20?"GPS 已定位":"GPS 已定位，但精度較差",acc<=8?"good":acc<=20?"warn":"bad");
+  gpsStatus(acc<=8?tr("GPS 狀態良好"):acc<=20?tr("GPS 已定位"):tr("GPS 已定位，但精度較差"),acc<=8?"good":acc<=20?"warn":"bad");
 
   let gpsSpeed=(typeof c.speed==="number"&&isFinite(c.speed)&&c.speed>=0)?c.speed*3.6:0;
   const cur={latitude:c.latitude,longitude:c.longitude,timestamp:pos.timestamp,accuracy:c.accuracy,receivedAt:Date.now()};
@@ -1707,7 +1714,7 @@ async function gpsDiagnostic(){
   }
 }
 function checkSplits(){while(totalDistance>=nextSplit){splits.push({distance:nextSplit,time:nowElapsed()});nextSplit+=100;renderSplits()}}
-function renderSplits(){const box=$("splits");if(!splits.length){box.innerHTML='<div class="status">尚無分段紀錄</div>';return}box.innerHTML="";let p=0;splits.forEach(i=>{const r=document.createElement("div");r.className="split";r.innerHTML="<span>"+i.distance+" m</span><span>"+fmtTime(i.time-p)+"</span>";p=i.time;box.appendChild(r)})}
+function renderSplits(){const box=$("splits");if(!splits.length){box.innerHTML='<div class="status">'+tr("尚無分段紀錄")+'</div>';return}box.innerHTML="";let p=0;splits.forEach(i=>{const r=document.createElement("div");r.className="split";r.innerHTML="<span>"+i.distance+" m</span><span>"+fmtTime(i.time-p)+"</span>";p=i.time;box.appendChild(r)})}
 function checkTarget(){const t=Number($("mode").value);if(running&&t>0&&totalDistance>=t)stopRun()}
 async function requestWakeLock(){try{if("wakeLock"in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){}}
 function releaseWakeLock(){try{if(wakeLock){wakeLock.release();wakeLock=null}}catch(e){}}
@@ -1764,7 +1771,7 @@ function startRun(){
 resetStrokeDetectorForNewRun();runSeries=[];runTrack=[];const ts=$("trackStatus");if(ts)ts.textContent=tr("GPX 軌跡點：")+"0";lastSeriesSecond=-1;
 running=true;startedAt=performance.now();lastPos=null;resetDistanceSoundCue();
 resetIntervalRuntime();
-$("startBtn").textContent="停止訓練";$("startBtn").className="danger";
+$("startBtn").textContent=tr("停止訓練");$("startBtn").className="danger";
 startTimerLoop();requestWakeLock();
 start20();
 if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));
@@ -2233,7 +2240,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.18.3"
+ creator="Dragon Boat Speedometer V7.18.4"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -2640,9 +2647,9 @@ if($("distanceSoundInterval")){
 function updateSoundSettingsSummary(){
   const el=$("soundSettingsSummary");
   if(!el)return;
-  const enabledText=distanceSoundEnabled?"開":"關";
-  const modeText=distanceSoundMode==="single"?(distanceSoundInterval+"m 一次"):("每 "+distanceSoundInterval+"m");
-  const sourceText=distanceSoundSource==="custom"?"自訂音":"嗶聲";
+  const enabledText=tr(distanceSoundEnabled?"開":"關");
+  const modeText=distanceSoundMode==="single"?(distanceSoundInterval+"m "+tr("一次")):(tr("每 ")+distanceSoundInterval+"m");
+  const sourceText=tr(distanceSoundSource==="custom"?"自訂音":"嗶聲");
   el.textContent=enabledText+" · "+modeText+" · "+sourceText;
 }
 
