@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.17.7</title>
+<title>Dragon Boat Speedometer V7.18.3</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -119,6 +119,196 @@ color:#fff;font-variant-numeric:tabular-nums
  #intervalLiveStatus{padding:16px 10px!important}
  #intervalLivePhase{text-align:center}
 }
+
+/* V7.17.8 compact settings */
+.compactSettings{border:1px solid rgba(255,255,255,.12);border-radius:14px;margin-bottom:10px;overflow:hidden;background:rgba(255,255,255,.035)}
+.compactSettings>summary{list-style:none;cursor:pointer;padding:13px 14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.compactSettings>summary::-webkit-details-marker{display:none}
+.compactSettings>summary::after{content:"＋";font-size:20px;line-height:1;opacity:.72}
+.compactSettings[open]>summary::after{content:"－"}
+.compactSettingsBody{padding:0 10px 10px}
+.compactSettings .grid{margin-bottom:0!important}
+
+/* V7.17.9 opening-page cleanup */
+.setupTitle{font-size:22px;font-weight:850;margin-bottom:4px}
+.setupSubtitle{font-size:13px;color:#9b9ba3;margin-bottom:14px}
+.primarySetup{background:#101116;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px;margin-bottom:10px}
+.primarySetup label{display:block;font-size:13px;color:#a8a8b0;margin-bottom:6px}
+.primarySetup #mode{width:100%;font-size:18px;font-weight:750;padding:12px}
+.setupSection{border:1px solid rgba(255,255,255,.10);border-radius:14px;margin-bottom:10px;overflow:hidden;background:rgba(255,255,255,.025)}
+.setupSection>summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:750;display:flex;align-items:center;justify-content:space-between}
+.setupSection>summary::-webkit-details-marker{display:none}
+.setupSection>summary::after{content:"＋";font-size:20px;opacity:.7}
+.setupSection[open]>summary::after{content:"－"}
+.setupSectionBody{padding:0 10px 10px}
+.preRunMetrics{display:none!important}
+.startStrokeCompact{margin-top:10px}
+#trainingSetupPanel>.compactSettings{margin-top:0}
+@media(max-width:520px){
+ .setupTitle{font-size:20px}
+ .primarySetup{padding:12px}
+}
+
+/* V7.18.0 approved sound layout */
+#soundSettingsCard{background:#1d1e22;border:1px solid #3b3c43;border-radius:18px;padding:0;margin:10px 0 14px}
+#soundSettingsCard>summary{padding:16px 18px;font-size:20px}
+#soundSettingsCard .compactSettingsBody{padding:0 14px 14px}
+#soundSettingsCard .grid{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(0,.95fr)!important;gap:12px!important;align-items:stretch}
+#soundSettingsCard .metric{background:#0d0e11;border-radius:16px;padding:14px!important;min-width:0}
+#soundSettingsCard .metric:nth-child(1){grid-column:1;grid-row:1/4;min-height:410px;border:1.5px solid #168cff;background:linear-gradient(180deg,#0c2741 0%,#10243a 100%)}
+#soundSettingsCard .metric:nth-child(2){grid-column:2;grid-row:1;min-height:auto}
+#soundSettingsCard .metric:nth-child(3){grid-column:1;grid-row:4;min-height:auto}
+#soundSettingsCard .soundRow{display:block!important}
+#soundSettingsCard .soundSwitch{position:absolute;right:16px;top:15px}
+#soundSettingsCard .metric:nth-child(1){position:relative}
+#soundSettingsCard #testDistanceSoundBtn{width:100%;min-height:58px;margin-top:18px!important;font-size:18px;font-weight:800}
+#soundSettingsCard #distanceSoundVolume{width:100%!important}
+#soundSettingsCard #distanceSoundMode{font-size:16px;padding:10px 8px}
+#soundSettingsCard #distanceSoundInterval{font-size:32px!important;font-weight:850!important;text-align:center;min-height:64px}
+#soundSettingsCard #distanceSoundSource{font-size:16px;padding:10px 8px}
+#soundSettingsCard #customSoundFile{font-size:14px}
+#soundSettingsCard #restoreDefaultSoundBtn{width:100%;min-height:48px}
+#soundSettingsCard .metric:nth-child(1) .label{font-size:19px;font-weight:800;color:#fff}
+#soundSettingsCard .metric:nth-child(1) .tiny{font-size:14px;line-height:1.45}
+@media(max-width:620px){
+ #soundSettingsCard .grid{grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr)!important;gap:9px!important}
+ #soundSettingsCard .metric{padding:12px!important}
+ #soundSettingsCard .metric:nth-child(1){min-height:390px}
+ #soundSettingsCard #distanceSoundInterval{font-size:28px!important}
+}
+
+/* V7.18.1 corrected sound layout */
+#soundSettingsCard{background:#1d1f24;border:1px solid #393c43;border-radius:18px;margin:10px 0 14px;overflow:hidden}
+#soundSettingsCard>summary{padding:16px 18px;font-size:20px;font-weight:800}
+#soundSettingsCard .compactSettingsBody{padding:0 14px 14px}
+.soundLayoutV181{display:grid;grid-template-columns:minmax(0,1.28fr) minmax(0,.92fr);gap:12px;align-items:stretch}
+.soundPrimaryCard{position:relative;background:linear-gradient(180deg,#0f2c48 0%,#10243a 100%);border:1.5px solid #168cff;border-radius:18px;padding:18px;min-height:430px}
+.soundPrimaryTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.soundPrimaryTitle{font-size:22px;font-weight:850;color:#fff;line-height:1.2}
+.soundPrimaryCard .soundSwitch{flex:0 0 auto}
+.soundDistanceLabel{font-size:16px;font-weight:750;margin-top:28px;margin-bottom:8px;color:#bfc4ce}
+.soundPrimaryCard #distanceSoundInterval{font-size:38px!important;font-weight:900!important;text-align:center!important;min-height:82px!important;border-radius:12px!important}
+.soundPrimaryCard .unit{font-size:28px!important}
+.soundPrimaryCard #testDistanceSoundBtn{width:100%;min-height:64px;margin-top:20px!important;font-size:20px;font-weight:850;border-radius:14px}
+.soundSideStack{display:grid;grid-template-rows:auto auto 1fr;gap:12px}
+.soundMiniCard{background:#0d0e11;border:1px solid #32353b;border-radius:16px;padding:14px;min-width:0}
+.soundMiniTitle{font-size:17px;font-weight:800;color:#fff}
+.soundMiniHeader{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.soundMiniCard select{font-size:16px!important;font-weight:750;padding:11px 10px!important;border-radius:12px}
+.soundMiniCard #distanceSoundVolume{width:100%!important;margin-top:10px}
+.customFileBtn{display:block;margin-top:10px;background:#f2f2f4;color:#0d0e11;border-radius:12px;padding:12px 10px;text-align:center;font-weight:800;cursor:pointer}
+.soundFileInput{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important}
+.soundRestoreBtn{width:100%!important;min-height:46px;margin-top:10px!important}
+@media(max-width:620px){
+  .soundLayoutV181{grid-template-columns:minmax(0,1.22fr) minmax(0,.9fr);gap:9px}
+  .soundPrimaryCard{padding:14px;min-height:410px}
+  .soundPrimaryTitle{font-size:19px}
+  .soundPrimaryCard #distanceSoundInterval{font-size:32px!important;min-height:74px!important}
+  .soundPrimaryCard #testDistanceSoundBtn{font-size:18px;min-height:58px}
+  .soundMiniCard{padding:11px}
+  .soundMiniTitle{font-size:15px}
+  .soundMiniCard select{font-size:14px!important;padding:9px 7px!important}
+}
+
+/* V7.18.2 prevent sound toggle/title overlap */
+.soundPrimaryTop{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;column-gap:14px!important}
+.soundPrimaryTop>div:first-child{min-width:0;padding-right:2px}
+.soundPrimaryCard .soundSwitch{position:static!important;right:auto!important;top:auto!important;margin:0!important;align-self:start!important;justify-self:end!important;flex:0 0 auto!important}
+.soundPrimaryTitle{padding-right:0!important;overflow-wrap:anywhere}
+@media(max-width:620px){
+  .soundPrimaryTop{grid-template-columns:minmax(0,1fr)!important;row-gap:10px!important}
+  .soundPrimaryCard .soundSwitch{justify-self:start!important}
+}
+
+/* V7.18.3 final sound layout fix */
+.soundPrimaryTop{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 54px!important;
+  align-items:start!important;
+  column-gap:10px!important;
+}
+.soundPrimaryTop>div:first-child{min-width:0!important;padding-right:0!important}
+.soundPrimaryCard .soundSwitch{
+  position:relative!important;
+  width:54px!important;
+  height:32px!important;
+  min-width:54px!important;
+  min-height:32px!important;
+  max-width:54px!important;
+  max-height:32px!important;
+  margin:0!important;
+  justify-self:end!important;
+  align-self:start!important;
+  display:inline-block!important;
+}
+.soundPrimaryCard .soundSwitch input{
+  position:absolute!important;
+  opacity:0!important;
+  width:1px!important;
+  height:1px!important;
+  margin:0!important;
+}
+.soundPrimaryCard .soundSlider{
+  position:absolute!important;
+  inset:0!important;
+  width:54px!important;
+  height:32px!important;
+  border-radius:999px!important;
+  background:#38383f!important;
+}
+.soundPrimaryCard .soundSlider:before{
+  width:26px!important;
+  height:26px!important;
+  left:3px!important;
+  top:3px!important;
+}
+.soundPrimaryCard .soundSwitch input:checked + .soundSlider{background:#168cff!important}
+.soundPrimaryCard .soundSwitch input:checked + .soundSlider:before{transform:translateX(22px)!important}
+.soundPrimaryNote{
+  margin-top:18px;
+  color:#aeb4bf;
+  font-size:13px;
+  line-height:1.55;
+}
+@media(max-width:620px){
+  .soundPrimaryTop{
+    grid-template-columns:minmax(0,1fr) 48px!important;
+    row-gap:0!important;
+    column-gap:8px!important;
+  }
+  .soundPrimaryTitle{
+    font-size:16px!important;
+    line-height:1.25!important;
+    white-space:normal!important;
+    overflow-wrap:normal!important;
+  }
+  .soundPrimaryCard .soundSwitch{
+    width:48px!important;
+    min-width:48px!important;
+    max-width:48px!important;
+    height:28px!important;
+    min-height:28px!important;
+    max-height:28px!important;
+    justify-self:end!important;
+  }
+  .soundPrimaryCard .soundSlider{
+    width:48px!important;
+    height:28px!important;
+  }
+  .soundPrimaryCard .soundSlider:before{
+    width:22px!important;
+    height:22px!important;
+    left:3px!important;
+    top:3px!important;
+  }
+  .soundPrimaryCard .soundSwitch input:checked + .soundSlider:before{
+    transform:translateX(20px)!important;
+  }
+  .soundPrimaryCard #distanceSoundInterval{
+    font-size:30px!important;
+  }
+  .soundPrimaryNote{font-size:11px}
+}
 </style>
 <style>
 @media(max-width:700px){
@@ -156,7 +346,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.17.7 · 自訂提示音版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.18.3 · 聲音介面精準修正版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -177,7 +367,40 @@ body.training-active #liveDashboardPanel{display:block}
 <div class="panel countdown" id="countdown">3</div>
 
 <div class="panel" id="trainingSetupPanel">
-<div class="grid" style="margin-bottom:10px">
+<div class="setupTitle">開始一趟訓練</div>
+<div class="setupSubtitle">先選訓練模式；其他資料需要時再展開設定。</div>
+
+<div class="primarySetup">
+  <label for="mode">訓練模式</label>
+  <select id="mode">
+<option value="50">50m 訓練</option>
+<option value="100">100m 訓練</option>
+<option value="150">150m 訓練</option>
+<option value="200">200m 訓練</option>
+<option value="500" selected>500m 訓練</option>
+<option value="800">800m 訓練</option>
+<option value="1000">1000m 訓練</option>
+<option value="2000">2000m 訓練</option>
+<option value="0">自由訓練</option>
+<option value="interval">間歇訓練</option>
+
+<option value="start">起步槳訓練</option></select>
+</div>
+
+<details class="setupSection">
+  <summary>本次訓練資料</summary>
+  <div class="setupSectionBody">
+    <div class="grid" style="margin-bottom:10px">
+<div class="metric"><div class="label">隊伍／組合</div><input id="teamName" value="黃金沒力號" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
+<div class="metric"><div class="label">訓練標籤</div><input id="sessionName" placeholder="例如：比賽配置 A" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
+</div>
+  </div>
+</details>
+
+<details class="setupSection">
+  <summary>隊員與速度設定</summary>
+  <div class="setupSectionBody">
+    <div class="grid" style="margin-bottom:10px">
 <div class="metric">
   <div class="label">訓練隊員</div>
   <select id="memberSelect" style="width:100%;margin-top:6px"><option value="">未指定隊員</option></select>
@@ -191,69 +414,82 @@ body.training-active #liveDashboardPanel{display:block}
   </select>
 </div>
 </div>
+  </div>
+</details>
 
-<div class="grid" style="margin-bottom:10px">
-  <div class="metric">
-    <div class="soundRow">
-      <div>
-        <div class="label">距離聲音提醒</div>
-        <div class="tiny" id="soundHint">到達指定距離時發出提示音</div>
-        <button type="button" id="testDistanceSoundBtn" class="smallBtn" style="margin-top:8px">測試聲音</button>
-        <div style="margin-top:10px">
-          <div class="tiny">提示音量 <span id="distanceSoundVolumeLabel">80%</span>（手機媒體音量也會影響）</div>
-          <input id="distanceSoundVolume" type="range" min="0" max="100" step="5" value="80" style="width:100%">
+
+<details class="compactSettings" id="soundSettingsCard" open>
+  <summary>
+    <span>🔊 聲音提醒</span>
+    <span class="tiny" id="soundSettingsSummary">設定</span>
+  </summary>
+  <div class="compactSettingsBody">
+    <div class="soundLayoutV181">
+      <section class="soundPrimaryCard">
+        <div class="soundPrimaryTop">
+          <div>
+            <div class="soundPrimaryTitle">📍 距離聲音提醒</div>
+            <div class="tiny" id="soundHint">設定距離提醒，訓練時自動發出提示音</div>
+          </div>
+          <label class="soundSwitch" aria-label="距離聲音提醒">
+            <input id="distanceSoundToggle" type="checkbox">
+            <span class="soundSlider"></span>
+          </label>
         </div>
-        <div style="margin-top:10px">
-          <div class="label">提示音來源</div>
-          <select id="distanceSoundSource" style="width:100%;margin-top:6px">
+
+        <div class="soundDistanceLabel">提醒距離</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+          <input id="distanceSoundInterval" type="number" min="10" max="5000" step="10" inputmode="numeric" value="100" style="width:100%">
+          <span class="unit">m</span>
+        </div>
+
+        <button type="button" id="testDistanceSoundBtn" class="smallBtn">▶ 測試聲音</button>
+        <div class="soundPrimaryNote">訓練時將依設定的距離自動發出提示音<br>（例如：每 100 公尺）</div>
+      </section>
+
+      <aside class="soundSideStack">
+        <section class="soundMiniCard">
+          <div class="soundMiniTitle">🔁 提醒方式</div>
+          <select id="distanceSoundMode" style="width:100%;margin-top:8px">
+            <option value="interval">每 X 公尺提醒一次</option>
+            <option value="single">只在 X 公尺提醒一次</option>
+          </select>
+        </section>
+
+        <section class="soundMiniCard">
+          <div class="soundMiniHeader">
+            <span class="soundMiniTitle">🔊 提示音量</span>
+            <span id="distanceSoundVolumeLabel">80%</span>
+          </div>
+          <input id="distanceSoundVolume" type="range" min="0" max="100" step="5" value="80">
+          <div class="tiny" style="margin-top:6px">手機媒體音量也會影響</div>
+        </section>
+
+        <section class="soundMiniCard">
+          <div class="soundMiniTitle">🎵 提示音來源</div>
+          <select id="distanceSoundSource" style="width:100%;margin-top:8px">
             <option value="default">內建嗶聲</option>
             <option value="custom">自訂音檔</option>
           </select>
-          <input id="customSoundFile" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac" style="width:100%;margin-top:8px">
-          <div class="tiny" id="customSoundName" style="margin-top:5px">尚未選擇自訂音檔</div>
-          <button type="button" id="restoreDefaultSoundBtn" class="smallBtn" style="margin-top:8px">恢復內建嗶聲</button>
-        </div>
-      </div>
-      <label class="soundSwitch" aria-label="距離聲音提醒">
-        <input id="distanceSoundToggle" type="checkbox">
-        <span class="soundSlider"></span>
-      </label>
+
+          <label class="customFileBtn" for="customSoundFile">📁 選擇音檔</label>
+          <input id="customSoundFile" type="file" accept="audio/*,.mp3,.m4a,.wav,.aac" class="soundFileInput">
+          <div class="tiny" id="customSoundName" style="margin-top:8px">尚未選擇自訂音檔</div>
+
+          <button type="button" id="restoreDefaultSoundBtn" class="smallBtn soundRestoreBtn">恢復內建嗶聲</button>
+        </section>
+      </aside>
     </div>
   </div>
-  <div class="metric">
-    <div class="label">提醒方式</div>
-    <select id="distanceSoundMode" style="width:100%;margin-top:6px">
-      <option value="interval">每 X 公尺提醒一次</option>
-      <option value="single">只在 X 公尺提醒一次</option>
-    </select>
-  </div>
-  <div class="metric">
-    <div class="label">提醒距離</div>
-    <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-      <input id="distanceSoundInterval" type="number" min="10" max="5000" step="10" inputmode="numeric" value="100" style="width:100%">
-      <span class="unit">m</span>
-    </div>
-  </div>
-</div>
+</details>
 
-<div class="grid" style="margin-bottom:10px">
-<div class="metric"><div class="label">隊伍／組合</div><input id="teamName" value="黃金沒力號" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
-<div class="metric"><div class="label">訓練標籤</div><input id="sessionName" placeholder="例如：比賽配置 A" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid #333;background:#101014;color:#fff;font-size:16px"></div>
-</div>
-<select id="mode">
-<option value="50">50m 訓練</option>
-<option value="100">100m 訓練</option>
-<option value="150">150m 訓練</option>
-<option value="200">200m 訓練</option>
-<option value="500" selected>500m 訓練</option>
-<option value="800">800m 訓練</option>
-<option value="1000">1000m 訓練</option>
-<option value="2000">2000m 訓練</option>
-<option value="0">自由訓練</option>
-<option value="interval">間歇訓練</option>
 
-<option value="start">起步槳訓練</option></select>
-<div class="formField"><label>起步訓練槳數</label><input id="startStrokeTarget" type="number" inputmode="numeric" min="0" max="100" step="1" value="20" placeholder="0 = 關閉"></div>
+
+
+
+
+
+<div class="formField startStrokeCompact"><label>起步訓練槳數</label><input id="startStrokeTarget" type="number" inputmode="numeric" min="0" max="100" step="1" value="20" placeholder="0 = 關閉"></div>
 <div class="tiny" id="startStrokeModeHint"></div>
 
 <div id="freeStopSettings" class="formField" style="display:none">
@@ -301,7 +537,7 @@ body.training-active #liveDashboardPanel{display:block}
   </div>
   <div class="tiny" style="margin-top:8px">每組工作完成後自動進入恢復倒數；最後一組完成後自動停止並保存。恢復期間 GPS、速度與槳頻仍持續記錄。</div>
 </div>
-<div class="grid">
+<div class="grid preRunMetrics">
 <div class="metric"><div class="label">時間</div><div class="num" id="time">00:00.0</div></div>
 <div class="metric"><div class="label">距離</div><div class="num"><span id="distance">0</span> m</div></div>
 <div class="metric"><div class="label">平均速度</div><div class="num"><span id="avg">0.0</span></div><div class="label">km/h</div></div>
@@ -1997,7 +2233,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.17.7"
+ creator="Dragon Boat Speedometer V7.18.3"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
@@ -2369,6 +2605,7 @@ if($("distanceSoundToggle")){
   $("distanceSoundToggle").onchange=()=>{
     distanceSoundEnabled=$("distanceSoundToggle").checked;
     localStorage.setItem("dragonboatDistanceSoundEnabled",distanceSoundEnabled?"1":"0");
+  updateSoundSettingsSummary();
     if(distanceSoundEnabled){
       playHtmlDistanceBeep();
       ensureAudioReady(true);
@@ -2381,6 +2618,7 @@ if($("distanceSoundMode")){
   $("distanceSoundMode").onchange=()=>{
     distanceSoundMode=$("distanceSoundMode").value==="single"?"single":"interval";
     localStorage.setItem("dragonboatDistanceSoundMode",distanceSoundMode);
+    updateSoundSettingsSummary();
     resetDistanceSoundCue();
   };
 }
@@ -2392,14 +2630,26 @@ if($("distanceSoundInterval")){
     distanceSoundInterval=v;
     $("distanceSoundInterval").value=String(v);
     localStorage.setItem("dragonboatDistanceSoundInterval",String(distanceSoundInterval));
+    updateSoundSettingsSummary();
     resetDistanceSoundCue();
   };
   $("distanceSoundInterval").onchange=applySoundDistance;
   $("distanceSoundInterval").onblur=applySoundDistance;
 }
+
+function updateSoundSettingsSummary(){
+  const el=$("soundSettingsSummary");
+  if(!el)return;
+  const enabledText=distanceSoundEnabled?"開":"關";
+  const modeText=distanceSoundMode==="single"?(distanceSoundInterval+"m 一次"):("每 "+distanceSoundInterval+"m");
+  const sourceText=distanceSoundSource==="custom"?"自訂音":"嗶聲";
+  el.textContent=enabledText+" · "+modeText+" · "+sourceText;
+}
+
 if($("testDistanceSoundBtn")){
   $("testDistanceSoundBtn").onclick=async()=>{
     if(distanceSoundSource==="custom"&&!customDistanceAudioUrl)await refreshCustomSoundAudio();
+updateSoundSettingsSummary();
     playHtmlDistanceBeep();
     ensureAudioReady(true);
   };
@@ -2432,6 +2682,7 @@ if($("distanceSoundSource")){
     }
     localStorage.setItem("dragonboatDistanceSoundSource",distanceSoundSource);
     distanceAudio=null;
+    updateSoundSettingsSummary();
   };
 }
 if($("customSoundFile")){
@@ -2450,6 +2701,7 @@ if($("customSoundFile")){
       localStorage.setItem("dragonboatDistanceSoundSource","custom");
       if($("distanceSoundSource"))$("distanceSoundSource").value="custom";
       distanceAudio=null;
+      updateSoundSettingsSummary();
       playHtmlDistanceBeep();
     }catch(e){alert("自訂音檔儲存失敗，請換一個較短的音檔再試一次");}
   };
@@ -2460,6 +2712,7 @@ if($("restoreDefaultSoundBtn")){
     localStorage.setItem("dragonboatDistanceSoundSource","default");
     if($("distanceSoundSource"))$("distanceSoundSource").value="default";
     distanceAudio=null;
+    updateSoundSettingsSummary();
     playHtmlDistanceBeep();
   };
 }
