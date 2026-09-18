@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0a0a0c"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<title>Dragon Boat Speedometer V7.18.4</title>
+<title>Dragon Boat Speedometer V7.18.6</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 *{box-sizing:border-box}
@@ -346,7 +346,7 @@ body.training-active #liveDashboardPanel{display:block}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.18.4 · 多語系完整修正版</div></div><div style="display:flex;align-items:center;gap:8px">
+<div class="top"><div><div class="title">DRAGON BOAT SPEEDOMETER</div><div class="ver">V7.18.6 · 起步槳偵測修正版</div></div><div style="display:flex;align-items:center;gap:8px">
 <select id="languageSelect" aria-label="Language" style="width:auto;min-width:105px;padding:7px 9px;border-radius:10px;border:1px solid #333;background:#15151a;color:#fff;font-size:13px">
 <option value="zh-TW">繁體中文</option>
 <option value="en">English</option>
@@ -1782,11 +1782,32 @@ function stopRun(){
 function resetAll(){
  if($("countdown"))$("countdown").style.display="none";
  setTrainingDashboard(false);stopRun();resetStrokeDetectorForNewRun();resetDistanceSoundCue();runSeries=[];runTrack=[];lastSeriesSecond=-1;elapsedBefore=0;startedAt=0;totalDistance=0;speedSamples=[];stableSpeedPeakSamples=[];maxSpeed=0;lastPos=null;splits=[];nextSplit=100;totalStrokeCount=0;strokeTimes=[];currentSpm=0;averageSpm=0;maxSpm=0;confidence=0;testActive=false;testStrokeCount=0;$("testStrokeCount").textContent="0";$("testTime").textContent="00:00.0";$("testSpm").textContent="0";$("testStartSpeed").textContent="0.0";$("testEndSpeed").textContent="0.0";$("testDeltaSpeed").textContent="0.0";$("testDistance").textContent="0.0";if($("testAutoStatus")) $("testAutoStatus").textContent=(startStrokeTarget>0?tr("起步訓練：等待第一槳…"):tr("起步訓練已關閉"));renderSplits();updateMain();resetV69StrokeDetector();rearmGpsAfterReset()}
-function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];if(lastStrokeTime&&t-lastStrokeTime<cfg.minGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));
+function registerStroke(t=performance.now()){const cfg=sensCfg[sensitivity];
+const registerMinGap=isStartStrokeMode()?Math.max(cfg.minGap,520):cfg.minGap;
+if(lastStrokeTime&&t-lastStrokeTime<registerMinGap)return;lastStrokeTime=t;totalStrokeCount++;strokeTimes.push(t);if(strokeTimes.length>10)strokeTimes.shift();if(strokeTimes.length>=3){const ints=[];for(let i=1;i<strokeTimes.length;i++){const d=strokeTimes[i]-strokeTimes[i-1];if(d>=330&&d<=1800)ints.push(d)}if(ints.length){const md=median(ints),spread=mad(ints);currentSpm=60000/md;averageSpm=((strokeTimes.length-1)/(strokeTimes[strokeTimes.length-1]-strokeTimes[0]))*60000;confidence=Math.max(0,Math.min(100,100-(spread/Math.max(1,md))*220));
 const startPeakMode=isStartStrokeMode();
-const maxSpmEnoughIntervals=startPeakMode?ints.length>=2:ints.length>=3;
-const maxSpmEnoughConfidence=startPeakMode?confidence>=50:confidence>=70;
-if(maxSpmEnoughIntervals&&maxSpmEnoughConfidence&&currentSpm>=35&&currentSpm<=140){stableSpmPeakSamples.push(currentSpm);const keep=startPeakMode?3:5;if(stableSpmPeakSamples.length>keep)stableSpmPeakSamples.shift();const need=startPeakMode?2:3;if(stableSpmPeakSamples.length>=need){const pv=stableSpmPeakSamples.slice().sort((a,b)=>a-b);const stablePeakSpm=pv[Math.floor(pv.length/2)];if(stablePeakSpm>maxSpm)maxSpm=stablePeakSpm;}}$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
+// V7.18.5：最高槳頻只接受「連續穩定節奏」，避免單次震動／回槳造成 109、120 SPM 假峰值。
+// 一般訓練需連續 5 個有效槳頻樣本；起步槳模式需 4 個。
+// 樣本彼此需落在約 ±4%（總範圍 8%）內，且感測信心必須足夠。
+const maxSpmEnoughIntervals=startPeakMode?ints.length>=3:ints.length>=4;
+const maxSpmEnoughConfidence=startPeakMode?confidence>=72:confidence>=82;
+if(maxSpmEnoughIntervals&&maxSpmEnoughConfidence&&currentSpm>=35&&currentSpm<=140){
+  stableSpmPeakSamples.push(currentSpm);
+  const need=startPeakMode?4:5;
+  if(stableSpmPeakSamples.length>need)stableSpmPeakSamples.shift();
+  if(stableSpmPeakSamples.length===need){
+    const pv=stableSpmPeakSamples.slice().sort((a,b)=>a-b);
+    const medPeak=pv[Math.floor(pv.length/2)];
+    const spreadRatio=(pv[pv.length-1]-pv[0])/Math.max(1,medPeak);
+    if(spreadRatio<=0.08){
+      // 使用穩定區段的中位數，而不是其中最高的瞬間值。
+      if(medPeak>maxSpm)maxSpm=medPeak;
+    }
+  }
+}else{
+  // 節奏或信心中斷時清空候選，必須重新累積一段連續穩定槳頻。
+  stableSpmPeakSamples=[];
+}$("strokeState").textContent=confidence>85?"穩定":confidence>65?"可用":"不穩定"}}if(calibrating){calibrationCount++;$("motionStatus").textContent="校正中 "+calibrationCount+"/10";if(calibrationCount>=10)finishCalibration()}if(testActive)registerTestStroke(t);updateMain()}
 function registerTestStroke(t){testStrokeCount++;$("testStrokeCount").textContent=testStrokeCount;if(testStrokeCount===1){testStartTime=t;testStartSpeed=smoothSpeed();$("testStartSpeed").textContent=testStartSpeed.toFixed(1)}if(testStrokeCount>=2){const e=t-testStartTime;$("testTime").textContent=fmtTime(e);$("testSpm").textContent=Math.round(((testStrokeCount-1)/(e/60000)))}if(startStrokeTarget>0&&testStrokeCount>=startStrokeTarget){
       const shouldStopForStartMode=isStartStrokeMode();testEndTime=t;testEndSpeed=smoothSpeed();testEndDistance=totalDistance;$("testEndSpeed").textContent=testEndSpeed.toFixed(1);$("testDeltaSpeed").textContent=(testEndSpeed-testStartSpeed).toFixed(1);$("testDistance").textContent=Math.max(0,testEndDistance-testStartDistance).toFixed(1);testActive=false;if($("testAutoStatus")) $("testAutoStatus").textContent=tr("起步訓練：分析完成");
       if(shouldStopForStartMode&&running)setTimeout(()=>{if(running)stopRun()},150)}}
@@ -1799,9 +1820,12 @@ function finishCalibration(){calibrating=false;const best=Object.entries(axisSco
 let motionEventCount=0,motionLastAt=0,motionDiagPeak=0,motionStillSamples=[],motionActive=false,motionActiveSince=0;
 let v69LastStrokeAt=0,v69Intervals=[],v69Noise=0.10,v69PrevSignal=0,v69PrevSlope=0,v69Peak=0;
 let v69SignalHistory=[],v69Confidence=0;
+// V7.18.6 起步槳專用：候選峰值需通過節奏鎖定，避免一次划槳被船體震動／回槳重複計數。
+let startStrokeIntervals=[],startStrokeRejected=0;
 
 function resetV69StrokeDetector(){
   v69LastStrokeAt=0;v69Intervals=[];v69Noise=0.10;v69PrevSignal=0;v69PrevSlope=0;v69Peak=0;
+  startStrokeIntervals=[];startStrokeRejected=0;
   motionStillSamples=[];motionActive=false;motionActiveSince=0;
   v69SignalHistory=[];v69Confidence=0;
   currentSpm=0;lastStrokeTime=0;
@@ -1813,6 +1837,28 @@ function medianV69(a){
   return b.length%2?b[m]:(b[m-1]+b[m])/2;
 }
 
+function startStrokeDetectionActive(){
+  return running && isStartStrokeMode();
+}
+function startStrokeCandidateOK(now){
+  if(!startStrokeDetectionActive() || !v69LastStrokeAt)return true;
+  const dt=now-v69LastStrokeAt;
+
+  // 起步龍舟合理的偵測上限先設約 115 SPM（521ms/槳）。
+  // 這不是把顯示值硬壓低，而是拒絕同一槳週期內太早出現的第二個峰值。
+  const absoluteMinGap=520;
+  if(dt<absoluteMinGap)return false;
+
+  // 有穩定節奏後，下一槳不能比近期中位槳週期提早超過 18%。
+  // 可保留逐步加速，但能擋掉回槳與船體二次震動。
+  const rhythmSource=startStrokeIntervals.slice(-5);
+  if(rhythmSource.length>=3){
+    const med=medianV69(rhythmSource);
+    const adaptiveMin=Math.max(absoluteMinGap,med*0.82);
+    if(dt<adaptiveMin)return false;
+  }
+  return true;
+}
 function enhancedStrokeMotion(e){
   if(!motionEnabled)return;
   const a=e.acceleration||e.accelerationIncludingGravity;
@@ -1880,12 +1926,16 @@ function enhancedStrokeMotion(e){
   const effectiveThreshold=expected?threshold*0.90:threshold;
   const peakEnded=(v69PrevSlope>0 && slope<=0);
 
-  if(peakEnded && motionActive && v69Peak>=Math.max(effectiveThreshold,0.34) && (v69LastStrokeAt===0 || since>=minGap)){
+  if(peakEnded && motionActive && v69Peak>=Math.max(effectiveThreshold,0.34) && (v69LastStrokeAt===0 || since>=minGap) && startStrokeCandidateOK(now)){
     if(v69LastStrokeAt>0){
       const dt=since;
       if(dt>=480 && dt<=1600){
         v69Intervals.push(dt);
         if(v69Intervals.length>10)v69Intervals.shift();
+        if(startStrokeDetectionActive()){
+          startStrokeIntervals.push(dt);
+          if(startStrokeIntervals.length>8)startStrokeIntervals.shift();
+        }
         const med=medianV69(v69Intervals);
         if(v69Intervals.length>=2){
           currentSpm=Math.round(60000/med);
@@ -1905,6 +1955,9 @@ function enhancedStrokeMotion(e){
     if($("confidence"))$("confidence").textContent=v69Confidence+"%";
     v69Peak=0;
   } else if(peakEnded){
+    if(startStrokeDetectionActive() && motionActive && v69Peak>=Math.max(effectiveThreshold,0.34) && !startStrokeCandidateOK(now)){
+      startStrokeRejected++;
+    }
     v69Peak=0;
   }
 
@@ -2240,7 +2293,7 @@ function buildGpx(r){
   }).join("");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1"
- creator="Dragon Boat Speedometer V7.18.4"
+ creator="Dragon Boat Speedometer V7.18.6"
  xmlns="http://www.topografix.com/GPX/1/1"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xmlns:db="https://example.com/dragonboat"
